@@ -1,0 +1,700 @@
+<div class="detail-page detail-page--wide">
+  <div class="detail-page__header">
+    <h2>{{ (isNew() ? 'ROOM.CREATE_TITLE' : 'ROOM.EDIT_TITLE') | translate }}</h2>
+
+    @if (!isNew()) {
+      <div class="detail-page__header-actions">
+        <button
+          type="button"
+          pButton
+          severity="danger"
+          [text]="true"
+          icon="pi pi-trash"
+          [label]="'COMMON.DELETE' | translate"
+          (click)="deleteRoom()"
+        ></button>
+      </div>
+    }
+  </div>
+
+  <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)">
+    <p-tablist>
+      <p-tab value="0">{{ 'ROOM.TAB_INFO' | translate }}</p-tab>
+      <p-tab value="1" [disabled]="isNew()">{{ 'ROOM.TAB_CONTRACT' | translate }}</p-tab>
+      <p-tab value="2" [disabled]="isNew() || !activeContract()">{{ 'ROOM.TAB_BILLING' | translate }}</p-tab>
+      <p-tab value="3" [disabled]="isNew() || !activeContract()">{{ 'ROOM.TAB_CHECKOUT' | translate }}</p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <!-- Tab 1: Thông tin cơ bản -->
+      <p-tabpanel value="0">
+        <div class="detail-page__form">
+          @if (!isNew()) {
+            <div class="field">
+              <label>{{ 'BRANCH.NAME' | translate }}</label>
+              <input type="text" pInputText [value]="branchName()" [disabled]="true" />
+            </div>
+          }
+
+          <div class="field">
+            <label for="roomCode">{{ 'ROOM.CODE' | translate }}</label>
+            <input id="roomCode" type="text" pInputText [ngModel]="roomCode()" (ngModelChange)="roomCode.set($event)" />
+            @if (submitted() && !roomCode()) {
+              <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="roomType">{{ 'ROOM.TYPE' | translate }}</label>
+            <p-select
+              inputId="roomType"
+              [options]="roomTypeOptions()"
+              [ngModel]="roomTypeId()"
+              (ngModelChange)="roomTypeId.set($event)"
+              optionLabel="name"
+              optionValue="id"
+              [disabled]="!isAdminTong"
+            />
+            @if (submitted() && !roomTypeId()) {
+              <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="monthlyRent">{{ 'ROOM.MONTHLY_RENT' | translate }}</label>
+            <p-inputnumber
+              inputId="monthlyRent"
+              [ngModel]="monthlyRent()"
+              (ngModelChange)="monthlyRent.set($event)"
+              mode="decimal"
+              [min]="0"
+              suffix=" ₫"
+            />
+            @if (submitted() && !monthlyRent()) {
+              <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+            }
+          </div>
+
+          @if (!isNew() && status()) {
+            <div class="field">
+              <label>{{ 'COMMON.STATUS' | translate }}</label>
+              <div>
+                <p-tag
+                  [value]="('ROOM.STATUS_' + status()) | translate"
+                  [severity]="status() === 'TRONG' ? 'info' : 'success'"
+                />
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="detail-page__actions">
+          <button type="button" pButton severity="danger" [text]="true" [label]="'COMMON.CANCEL' | translate" [routerLink]="['/rooms']"></button>
+          <button type="button" pButton [label]="'COMMON.SAVE' | translate" [loading]="loading()" (click)="saveRoom()"></button>
+        </div>
+
+        @if (!isNew()) {
+          <div class="detail-page__section">
+            <h3 class="detail-page__section-title">{{ 'ROOM.HANDOVER_ITEMS' | translate }}</h3>
+            <p-table [value]="handoverItems()" dataKey="id">
+              <ng-template #header>
+                <tr>
+                  <th>{{ 'ROOM_TYPE.ITEM_NAME' | translate }}</th>
+                  <th>{{ 'ROOM_TYPE.QUANTITY' | translate }}</th>
+                  <th>{{ 'ROOM_TYPE.NOTE' | translate }}</th>
+                </tr>
+              </ng-template>
+              <ng-template #body let-item>
+                <tr>
+                  <td>{{ item.itemName }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>{{ item.note ?? '—' }}</td>
+                </tr>
+              </ng-template>
+              <ng-template #emptymessage>
+                <tr>
+                  <td colspan="3">{{ 'COMMON.NO_DATA' | translate }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        }
+      </p-tabpanel>
+
+      <!-- Tab 2: Hợp đồng & Người thuê -->
+      <p-tabpanel value="1">
+        @if (activeContract(); as contract) {
+          <div class="detail-page__section">
+            <h3 class="detail-page__section-title">{{ 'CONTRACT.ACTIVE_TITLE' | translate }}</h3>
+            <div class="room-contract-summary">
+              <div><span>{{ 'CONTRACT.START_DATE' | translate }}:</span> {{ contract.startDate }}</div>
+              <div><span>{{ 'CONTRACT.DEPOSIT' | translate }}:</span> {{ contract.depositAmount | number: '1.0-0' }} ₫</div>
+              <div><span>{{ 'ROOM.MONTHLY_RENT' | translate }}:</span> {{ contract.monthlyRent | number: '1.0-0' }} ₫</div>
+            </div>
+
+            <div class="room-tenant-picker">
+              <label>{{ 'CONTRACT.END_DATE' | translate }}:</label>
+              <p-datepicker [ngModel]="editEndDate()" (ngModelChange)="editEndDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" [showButtonBar]="true" />
+              <button type="button" pButton [text]="true" [label]="'COMMON.SAVE' | translate" [loading]="loading()" (click)="saveEndDate()"></button>
+            </div>
+
+            <p-table [value]="activeContractDetail()?.tenants ?? []" dataKey="tenantId">
+              <ng-template #header>
+                <tr>
+                  <th>{{ 'TENANT.FULL_NAME' | translate }}</th>
+                  <th>{{ 'TENANT.ID_CARD' | translate }}</th>
+                  <th>{{ 'TENANT.PHONE' | translate }}</th>
+                  <th></th>
+                  <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+                </tr>
+              </ng-template>
+              <ng-template #body let-tenant>
+                <tr>
+                  <td>{{ tenant.fullName }}</td>
+                  <td>{{ tenant.idCardNumber }}</td>
+                  <td>{{ tenant.phoneNumber }}</td>
+                  <td>
+                    @if (tenant.representative) {
+                      <p-tag [value]="'TENANT.REPRESENTATIVE_TAG' | translate" severity="info" />
+                    }
+                  </td>
+                  <td>
+                    @if (!tenant.representative) {
+                      <button
+                        type="button"
+                        pButton
+                        severity="danger"
+                        [text]="true"
+                        icon="pi pi-times"
+                        (click)="removeTenantFromActiveContract(tenant.tenantId)"
+                      ></button>
+                    }
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template #emptymessage>
+                <tr>
+                  <td colspan="5">{{ 'COMMON.NO_DATA' | translate }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+
+            <div class="room-tenant-picker">
+              <p-autocomplete
+                [ngModel]="addTenantQuery()"
+                (ngModelChange)="addTenantQuery.set($event)"
+                [suggestions]="addTenantSuggestions()"
+                (completeMethod)="searchTenants($event, 'active-contract')"
+                (onSelect)="addExistingTenantToActiveContract($event.value)"
+                optionLabel="fullName"
+                [placeholder]="'TENANT.SEARCH_PLACEHOLDER' | translate"
+              />
+              <button
+                type="button"
+                pButton
+                [text]="true"
+                icon="pi pi-plus"
+                [label]="'CONTRACT.CREATE_NEW_TENANT' | translate"
+                (click)="openCreateTenantDialog('active-contract')"
+              ></button>
+            </div>
+          </div>
+        } @else {
+          <div class="detail-page__section">
+            <h3 class="detail-page__section-title">{{ 'CONTRACT.CREATE_TITLE' | translate }}</h3>
+
+            <div class="detail-page__form">
+              <div class="field">
+                <label>{{ 'CONTRACT.START_DATE' | translate }}</label>
+                <p-datepicker [ngModel]="newContractStartDate()" (ngModelChange)="newContractStartDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" />
+                @if (newContractSubmitted() && !newContractStartDate()) {
+                  <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+                }
+              </div>
+
+              <div class="field">
+                <label>{{ 'CONTRACT.END_DATE' | translate }}</label>
+                <p-datepicker [ngModel]="newContractEndDate()" (ngModelChange)="newContractEndDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" [showButtonBar]="true" />
+              </div>
+
+              <div class="field">
+                <label>{{ 'CONTRACT.DEPOSIT' | translate }}</label>
+                <p-inputnumber [ngModel]="newContractDeposit()" (ngModelChange)="newContractDeposit.set($event)" mode="decimal" [min]="0" suffix=" ₫" />
+                @if (newContractSubmitted() && !newContractDeposit()) {
+                  <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+                }
+              </div>
+
+              <div class="field">
+                <label>{{ 'CONTRACT.RENT_OVERRIDE' | translate }}</label>
+                <p-inputnumber [ngModel]="newContractRent()" (ngModelChange)="newContractRent.set($event)" mode="decimal" [min]="0" suffix=" ₫" />
+              </div>
+            </div>
+
+            <p-table [value]="newContractTenants()" dataKey="tenantId">
+              <ng-template #header>
+                <tr>
+                  <th>{{ 'TENANT.FULL_NAME' | translate }}</th>
+                  <th>{{ 'TENANT.REPRESENTATIVE' | translate }}</th>
+                  <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+                </tr>
+              </ng-template>
+              <ng-template #body let-tenant>
+                <tr>
+                  <td>{{ tenant.fullName }}</td>
+                  <td>
+                    @if (tenant.representative) {
+                      <p-tag [value]="'TENANT.REPRESENTATIVE_TAG' | translate" severity="info" />
+                    } @else {
+                      <button type="button" pButton [text]="true" [label]="'CONTRACT.SET_REPRESENTATIVE' | translate" (click)="setNewContractRepresentative(tenant.tenantId)"></button>
+                    }
+                  </td>
+                  <td>
+                    <button type="button" pButton severity="danger" [text]="true" icon="pi pi-times" (click)="removeNewContractTenant(tenant.tenantId)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template #emptymessage>
+                <tr>
+                  <td colspan="3">{{ 'COMMON.NO_DATA' | translate }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+            @if (newContractSubmitted() && newContractTenants().length === 0) {
+              <small class="field-error">{{ 'CONTRACT.NEED_AT_LEAST_ONE_TENANT' | translate }}</small>
+            }
+
+            <div class="room-tenant-picker">
+              <p-autocomplete
+                [ngModel]="newContractTenantQuery()"
+                (ngModelChange)="newContractTenantQuery.set($event)"
+                [suggestions]="newContractTenantSuggestions()"
+                (completeMethod)="searchTenants($event, 'new-contract')"
+                (onSelect)="addTenantToNewContract($event.value)"
+                optionLabel="fullName"
+                [placeholder]="'TENANT.SEARCH_PLACEHOLDER' | translate"
+              />
+              <button
+                type="button"
+                pButton
+                [text]="true"
+                icon="pi pi-plus"
+                [label]="'CONTRACT.CREATE_NEW_TENANT' | translate"
+                (click)="openCreateTenantDialog('new-contract')"
+              ></button>
+            </div>
+
+            <div class="detail-page__actions">
+              <button type="button" pButton [label]="'CONTRACT.CREATE_ACTION' | translate" [loading]="loading()" (click)="createContract()"></button>
+            </div>
+          </div>
+        }
+
+        <div class="detail-page__section">
+          <h3 class="detail-page__section-title">{{ 'CONTRACT.HISTORY_TITLE' | translate }}</h3>
+          <p-table [value]="historyContracts()" dataKey="id">
+            <ng-template #header>
+              <tr>
+                <th>{{ 'CONTRACT.START_DATE' | translate }}</th>
+                <th>{{ 'CONTRACT.END_DATE' | translate }}</th>
+                <th>{{ 'CONTRACT.DEPOSIT' | translate }}</th>
+                <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-contract>
+              <tr>
+                <td>{{ contract.startDate }}</td>
+                <td>{{ contract.endDate ?? '—' }}</td>
+                <td>{{ contract.depositAmount | number: '1.0-0' }} ₫</td>
+                <td>
+                  <button type="button" pButton [text]="true" [label]="'CONTRACT.VIEW_TENANTS' | translate" (click)="viewHistoryTenants(contract)"></button>
+                  <button type="button" pButton [text]="true" [label]="'CONTRACT.VIEW_BILLS' | translate" (click)="viewHistoryBills(contract)"></button>
+                  <button type="button" pButton [text]="true" [label]="'CONTRACT.VIEW_CHECKLIST' | translate" (click)="viewChecklist(contract)"></button>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+              <tr>
+                <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabpanel>
+
+      <!-- Tab 3: Hóa đơn & Công nợ -->
+      <p-tabpanel value="2">
+        @if (!activeContract()) {
+          <p>{{ 'BILLING.NO_ACTIVE_CONTRACT' | translate }}</p>
+        } @else {
+          <div class="room-bill-create">
+            <p-datepicker [ngModel]="newBillPeriod()" (ngModelChange)="newBillPeriod.set($event)" view="month" dateFormat="mm/yy" [showIcon]="true" />
+            <button type="button" pButton icon="pi pi-plus" [label]="'BILLING.CREATE_BILL_ACTION' | translate" (click)="createBill()"></button>
+          </div>
+
+          <p-table [value]="bills()" dataKey="id" class="room-bill-table">
+            <ng-template #header>
+              <tr>
+                <th>{{ 'BILLING.MONTH_YEAR' | translate }}</th>
+                <th>{{ 'BILLING.RENT_AMOUNT' | translate }}</th>
+                <th>{{ 'BILLING.TOTAL_EXTRA_FEE' | translate }}</th>
+                <th>{{ 'BILLING.TOTAL_AMOUNT' | translate }}</th>
+                <th>{{ 'BILLING.REMAINING_AMOUNT' | translate }}</th>
+                <th>{{ 'COMMON.STATUS' | translate }}</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-bill>
+              <tr class="clickable-row" (click)="selectBill(bill)">
+                <td>{{ bill.billMonth }}/{{ bill.billYear }}</td>
+                <td>{{ bill.rentAmount | number: '1.0-0' }} ₫</td>
+                <td>{{ bill.totalExtraFee | number: '1.0-0' }} ₫</td>
+                <td>{{ bill.totalAmount | number: '1.0-0' }} ₫</td>
+                <td>{{ bill.remainingAmount | number: '1.0-0' }} ₫</td>
+                <td>
+                  <p-tag
+                    [value]="('BILLING.STATUS_' + bill.paymentStatus) | translate"
+                    [severity]="bill.paymentStatus === 'DA_THANH_TOAN' ? 'success' : bill.paymentStatus === 'THANH_TOAN_MOT_PHAN' ? 'warn' : 'danger'"
+                  />
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+              <tr>
+                <td colspan="6">{{ 'COMMON.NO_DATA' | translate }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          @if (billDetail(); as detail) {
+            <div class="detail-page__section">
+              <h3 class="detail-page__section-title">{{ 'BILLING.EXTRA_FEE_ITEMS' | translate }} — {{ detail.bill.billMonth }}/{{ detail.bill.billYear }}</h3>
+
+              <p-table [value]="detail.extraFeeItems" dataKey="id">
+                <ng-template #header>
+                  <tr>
+                    <th>{{ 'BILLING.CATEGORY' | translate }}</th>
+                    <th>{{ 'DEBT.AMOUNT' | translate }}</th>
+                    <th>{{ 'ROOM_TYPE.NOTE' | translate }}</th>
+                    @if (detail.bill.paymentStatus !== 'DA_THANH_TOAN') {
+                      <th></th>
+                    }
+                  </tr>
+                </ng-template>
+                <ng-template #body let-item>
+                  <tr>
+                    <td>{{ item.extraFeeCategoryName }}</td>
+                    <td>{{ item.amount | number: '1.0-0' }} ₫</td>
+                    <td>{{ item.note ?? '—' }}</td>
+                    @if (detail.bill.paymentStatus !== 'DA_THANH_TOAN') {
+                      <td>
+                        <button type="button" pButton severity="danger" [text]="true" icon="pi pi-trash" (click)="deleteExtraFeeItem(item)"></button>
+                      </td>
+                    }
+                  </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                  <tr>
+                    <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+
+              @if (detail.bill.paymentStatus !== 'DA_THANH_TOAN') {
+                <div class="room-fee-form">
+                  <p-select [options]="extraFeeCategories()" [ngModel]="newFeeCategoryId()" (ngModelChange)="newFeeCategoryId.set($event)" optionLabel="name" optionValue="id" [placeholder]="'BILLING.CATEGORY' | translate" />
+                  <p-inputnumber [ngModel]="newFeeAmount()" (ngModelChange)="newFeeAmount.set($event)" mode="decimal" [min]="0" suffix=" ₫" [placeholder]="'DEBT.AMOUNT' | translate" />
+                  <input type="text" pInputText [ngModel]="newFeeNote()" (ngModelChange)="newFeeNote.set($event)" [placeholder]="'ROOM_TYPE.NOTE' | translate" />
+                  <button type="button" pButton icon="pi pi-plus" [label]="'COMMON.ADD_NEW' | translate" (click)="addExtraFeeItem()"></button>
+                </div>
+              }
+            </div>
+
+            <div class="detail-page__section">
+              <h3 class="detail-page__section-title">{{ 'BILLING.PAYMENTS' | translate }}</h3>
+
+              <div class="room-contract-summary">
+                <div><span>{{ 'BILLING.TOTAL_AMOUNT' | translate }}:</span> {{ detail.bill.totalAmount | number: '1.0-0' }} ₫</div>
+                <div><span>{{ 'BILLING.REMAINING_AMOUNT' | translate }}:</span> {{ detail.bill.remainingAmount | number: '1.0-0' }} ₫</div>
+              </div>
+
+              <p-table [value]="detail.payments" dataKey="id">
+                <ng-template #header>
+                  <tr>
+                    <th>{{ 'DEBT.AMOUNT' | translate }}</th>
+                    <th>{{ 'BILLING.PAYMENT_DATE' | translate }}</th>
+                    <th>{{ 'BILLING.PAYMENT_METHOD' | translate }}</th>
+                    <th>{{ 'ROOM_TYPE.NOTE' | translate }}</th>
+                  </tr>
+                </ng-template>
+                <ng-template #body let-payment>
+                  <tr>
+                    <td>{{ payment.amount | number: '1.0-0' }} ₫</td>
+                    <td>{{ payment.paymentDate }}</td>
+                    <td>{{ payment.method ?? '—' }}</td>
+                    <td>{{ payment.note ?? '—' }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                  <tr>
+                    <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+
+              @if (detail.bill.paymentStatus !== 'DA_THANH_TOAN') {
+                <div class="room-payment-form">
+                  <p-inputnumber [ngModel]="newPaymentAmount()" (ngModelChange)="newPaymentAmount.set($event)" mode="decimal" [min]="0" [max]="detail.bill.remainingAmount" suffix=" ₫" [placeholder]="'DEBT.AMOUNT' | translate" />
+                  <p-datepicker [ngModel]="newPaymentDate()" (ngModelChange)="newPaymentDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" />
+                  <input type="text" pInputText [ngModel]="newPaymentMethod()" (ngModelChange)="newPaymentMethod.set($event)" [placeholder]="'BILLING.PAYMENT_METHOD' | translate" />
+                  <input type="text" pInputText [ngModel]="newPaymentNote()" (ngModelChange)="newPaymentNote.set($event)" [placeholder]="'ROOM_TYPE.NOTE' | translate" />
+                  <button
+                    type="button"
+                    pButton
+                    icon="pi pi-plus"
+                    [label]="'BILLING.RECORD_PAYMENT_ACTION' | translate"
+                    [disabled]="!!newPaymentAmount() && newPaymentAmount()! > detail.bill.remainingAmount"
+                    (click)="recordPayment()"
+                  ></button>
+                </div>
+                @if (newPaymentAmount() && newPaymentAmount()! > detail.bill.remainingAmount) {
+                  <small class="field-error">{{ 'BILLING.PAYMENT_EXCEEDS_REMAINING' | translate }}</small>
+                }
+              } @else {
+                <p>{{ 'BILLING.ALREADY_PAID_NOTICE' | translate }}</p>
+              }
+            </div>
+          }
+        }
+      </p-tabpanel>
+
+      <!-- Tab 4: Trả phòng -->
+      <p-tabpanel value="3">
+        @if (!activeContract()) {
+          <p>{{ 'CHECKOUT.NO_ACTIVE_CONTRACT' | translate }}</p>
+        } @else {
+          <p-table [value]="checkoutItems()" dataKey="roomTypeHandoverItemId">
+            <ng-template #header>
+              <tr>
+                <th>{{ 'ROOM_TYPE.ITEM_NAME' | translate }}</th>
+                <th>{{ 'CHECKOUT.ITEM_STATUS' | translate }}</th>
+                <th>{{ 'CHECKOUT.DEDUCTION' | translate }}</th>
+                <th>{{ 'ROOM_TYPE.NOTE' | translate }}</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ row.itemName }}</td>
+                <td>
+                  <p-select
+                    [options]="checklistStatusOptions()"
+                    [ngModel]="row.status"
+                    (ngModelChange)="row.status = $event; onCheckoutItemStatusChange(row)"
+                    optionLabel="label"
+                    optionValue="value"
+                  />
+                </td>
+                <td>
+                  <p-inputnumber
+                    [ngModel]="row.deductionAmount"
+                    (ngModelChange)="row.deductionAmount = $event"
+                    mode="decimal"
+                    [min]="0"
+                    suffix=" ₫"
+                    [disabled]="row.status === 'CON_NGUYEN'"
+                  />
+                </td>
+                <td>
+                  <input type="text" pInputText [ngModel]="row.note" (ngModelChange)="row.note = $event" />
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <div class="detail-page__form">
+            <div class="field">
+              <label>{{ 'CHECKOUT.DATE' | translate }}</label>
+              <p-datepicker [ngModel]="checkoutDate()" (ngModelChange)="checkoutDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" />
+              @if (checkoutSubmitted() && !checkoutDate()) {
+                <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+              }
+            </div>
+            <div class="field">
+              <label>{{ 'ROOM_TYPE.NOTE' | translate }}</label>
+              <textarea pTextarea rows="2" [ngModel]="checkoutNote()" (ngModelChange)="checkoutNote.set($event)"></textarea>
+            </div>
+          </div>
+
+          <div class="detail-page__actions">
+            <button type="button" pButton severity="danger" [label]="'CHECKOUT.SUBMIT_ACTION' | translate" [loading]="loading()" (click)="submitCheckout()"></button>
+          </div>
+        }
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+  <!-- Checklist history / result dialog -->
+  <p-dialog
+    [header]="'CHECKOUT.CHECKLIST_DIALOG_TITLE' | translate"
+    [modal]="true"
+    [visible]="checklistDialogVisible()"
+    (visibleChange)="checklistDialogVisible.set($event)"
+    [style]="{ width: '40rem' }"
+  >
+    @if (checklistData(); as data) {
+      <p-table [value]="data.items" dataKey="id">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'ROOM_TYPE.ITEM_NAME' | translate }}</th>
+            <th>{{ 'CHECKOUT.ITEM_STATUS' | translate }}</th>
+            <th>{{ 'CHECKOUT.DEDUCTION' | translate }}</th>
+            <th>{{ 'ROOM_TYPE.NOTE' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-item>
+          <tr>
+            <td>{{ item.itemName }}</td>
+            <td>{{ ('CHECKOUT.STATUS_' + item.status) | translate }}</td>
+            <td>{{ item.deductionAmount | number: '1.0-0' }} ₫</td>
+            <td>{{ item.note ?? '—' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <div class="room-checkout-summary">
+        <div><span>{{ 'CONTRACT.DEPOSIT' | translate }}:</span> {{ data.depositAmount | number: '1.0-0' }} ₫</div>
+        <div><span>{{ 'CHECKOUT.TOTAL_DEDUCTION' | translate }}:</span> {{ data.deductionAmount | number: '1.0-0' }} ₫</div>
+        <div><span>{{ 'CHECKOUT.DEPOSIT_REFUND' | translate }}:</span> {{ data.depositRefundAmount | number: '1.0-0' }} ₫</div>
+      </div>
+
+      @if (data.debtRecord; as debt) {
+        <div class="room-checkout-debt">
+          {{ 'CHECKOUT.DEBT_CREATED' | translate }}: {{ debt.amount | number: '1.0-0' }} ₫ — {{ debt.reason }}
+        </div>
+      }
+    }
+  </p-dialog>
+
+  <!-- History contract: tenants who lived under that contract -->
+  <p-dialog
+    [header]="'CONTRACT.VIEW_TENANTS' | translate"
+    [modal]="true"
+    [visible]="historyTenantsDialogVisible()"
+    (visibleChange)="historyTenantsDialogVisible.set($event)"
+    [style]="{ width: '36rem' }"
+  >
+    <p-table [value]="historyTenants()" dataKey="tenantId">
+      <ng-template #header>
+        <tr>
+          <th>{{ 'TENANT.FULL_NAME' | translate }}</th>
+          <th>{{ 'TENANT.ID_CARD' | translate }}</th>
+          <th>{{ 'TENANT.PHONE' | translate }}</th>
+          <th></th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-tenant>
+        <tr>
+          <td>{{ tenant.fullName }}</td>
+          <td>{{ tenant.idCardNumber }}</td>
+          <td>{{ tenant.phoneNumber }}</td>
+          <td>
+            @if (tenant.representative) {
+              <p-tag [value]="'TENANT.REPRESENTATIVE_TAG' | translate" severity="info" />
+            }
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-dialog>
+
+  <!-- History contract: monthly bills, so unpaid months/amounts are visible after the contract ended -->
+  <p-dialog
+    [header]="'CONTRACT.VIEW_BILLS' | translate"
+    [modal]="true"
+    [visible]="historyBillsDialogVisible()"
+    (visibleChange)="historyBillsDialogVisible.set($event)"
+    [style]="{ width: '44rem' }"
+  >
+    <p-table [value]="historyBills()" dataKey="id">
+      <ng-template #header>
+        <tr>
+          <th>{{ 'BILLING.MONTH_YEAR' | translate }}</th>
+          <th>{{ 'BILLING.TOTAL_AMOUNT' | translate }}</th>
+          <th>{{ 'BILLING.REMAINING_AMOUNT' | translate }}</th>
+          <th>{{ 'COMMON.STATUS' | translate }}</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-bill>
+        <tr>
+          <td>{{ bill.billMonth }}/{{ bill.billYear }}</td>
+          <td>{{ bill.totalAmount | number: '1.0-0' }} ₫</td>
+          <td>{{ bill.remainingAmount | number: '1.0-0' }} ₫</td>
+          <td>
+            <p-tag
+              [value]="('BILLING.STATUS_' + bill.paymentStatus) | translate"
+              [severity]="bill.paymentStatus === 'DA_THANH_TOAN' ? 'success' : bill.paymentStatus === 'THANH_TOAN_MOT_PHAN' ? 'warn' : 'danger'"
+            />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-dialog>
+
+  <!-- Create-tenant-inline dialog (used by both the new-contract picker and the active-contract "add tenant" picker) -->
+  <p-dialog
+    [header]="'TENANT.CREATE_TITLE' | translate"
+    [modal]="true"
+    [visible]="tenantDialogVisible()"
+    (visibleChange)="tenantDialogVisible.set($event)"
+    [style]="{ width: '28rem' }"
+  >
+    <div class="detail-page__form">
+      <div class="field">
+        <label>{{ 'TENANT.FULL_NAME' | translate }}</label>
+        <input type="text" pInputText [ngModel]="tenantFullName()" (ngModelChange)="tenantFullName.set($event)" />
+        @if (tenantSubmitted() && !tenantFullName()) {
+          <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+        }
+      </div>
+      <div class="field">
+        <label>{{ 'TENANT.DATE_OF_BIRTH' | translate }}</label>
+        <p-datepicker [ngModel]="tenantDateOfBirth()" (ngModelChange)="tenantDateOfBirth.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" />
+        @if (tenantSubmitted() && !tenantDateOfBirth()) {
+          <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+        }
+      </div>
+      <div class="field">
+        <label>{{ 'TENANT.ID_CARD' | translate }}</label>
+        <input type="text" pInputText [ngModel]="tenantIdCard()" (ngModelChange)="tenantIdCard.set($event)" />
+        @if (tenantSubmitted() && !tenantIdCard()) {
+          <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+        }
+      </div>
+      <div class="field">
+        <label>{{ 'TENANT.PHONE' | translate }}</label>
+        <input type="text" pInputText [ngModel]="tenantPhone()" (ngModelChange)="tenantPhone.set($event)" />
+        @if (tenantSubmitted() && !tenantPhone()) {
+          <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+        }
+      </div>
+      <div class="field">
+        <label>{{ 'TENANT.EMAIL' | translate }}</label>
+        <input type="email" pInputText [ngModel]="tenantEmail()" (ngModelChange)="tenantEmail.set($event)" />
+      </div>
+    </div>
+
+    <ng-template #footer>
+      <button type="button" pButton severity="danger" [text]="true" [label]="'COMMON.CANCEL' | translate" (click)="tenantDialogVisible.set(false)"></button>
+      <button type="button" pButton [label]="'COMMON.SAVE' | translate" [loading]="loading()" (click)="submitNewTenant()"></button>
+    </ng-template>
+  </p-dialog>
+</div>

@@ -1,0 +1,69 @@
+<div class="list-page">
+  <h2>{{ 'NAV.TENANTS' | translate }}</h2>
+
+  <div class="list-page__filters">
+    <p-iconfield>
+      <p-inputicon class="pi pi-search" />
+      <input
+        type="text"
+        pInputText
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        (keyup.enter)="onFilterChange()"
+        [placeholder]="'TENANT.SEARCH_PLACEHOLDER' | translate"
+      />
+    </p-iconfield>
+
+    <button
+      type="button"
+      pButton
+      icon="pi pi-search"
+      [label]="'COMMON.SEARCH' | translate"
+      (click)="onFilterChange()"
+    ></button>
+
+    <button
+      type="button"
+      pButton
+      icon="pi pi-plus"
+      [label]="'COMMON.ADD_NEW' | translate"
+      (click)="goToCreate()"
+    ></button>
+  </div>
+
+  <p-table
+    [value]="rows()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="20"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    [totalRecords]="totalRecords()"
+    [loading]="loading()"
+    (onLazyLoad)="load($event)"
+    dataKey="id"
+  >
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="fullName">{{ 'TENANT.FULL_NAME' | translate }} <p-sortIcon field="fullName" /></th>
+        <th>{{ 'TENANT.ID_CARD' | translate }}</th>
+        <th>{{ 'TENANT.PHONE' | translate }}</th>
+        <th>{{ 'TENANT.EMAIL' | translate }}</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-tenant>
+      <tr class="clickable-row" (click)="goToDetail(tenant.id)">
+        <td>{{ tenant.fullName }}</td>
+        <td>{{ tenant.idCardNumber }}</td>
+        <td>{{ tenant.phoneNumber }}</td>
+        <td>{{ tenant.email ?? '—' }}</td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

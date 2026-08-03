@@ -1,0 +1,84 @@
+.app-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4rem;
+  padding: 0 1.5rem;
+  background: var(--p-content-background);
+  border-bottom: 1px solid var(--p-content-border-color);
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--p-primary-color);
+
+    i {
+      font-size: 1.4rem;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0.6rem;
+    border: none;
+    background: transparent;
+    border-radius: var(--p-content-border-radius);
+    cursor: pointer;
+    color: var(--p-text-color);
+
+    &:hover {
+      background: var(--p-content-hover-background);
+    }
+  }
+
+  &__user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+  }
+
+  &__user-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  &__user-role {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__menu {
+    display: flex;
+    flex-direction: column;
+    min-width: 10rem;
+  }
+
+  &__menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.75rem;
+    border: none;
+    background: transparent;
+    text-align: left;
+    border-radius: var(--p-content-border-radius);
+    cursor: pointer;
+    color: var(--p-text-color);
+
+    &:hover {
+      background: var(--p-content-hover-background);
+    }
+  }
+}

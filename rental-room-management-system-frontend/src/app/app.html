@@ -1,0 +1,8 @@
+@if (loadingService.isLoading()) {
+  <p-progressBar mode="indeterminate" [style]="{ height: '3px' }" class="app-loading-bar" />
+}
+
+<p-confirmDialog />
+<p-toast />
+
+<router-outlet />

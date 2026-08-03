@@ -1,0 +1,102 @@
+<div class="list-page">
+  <h2>{{ 'NAV.DEBT_RECORDS' | translate }}</h2>
+
+  <div class="list-page__filters">
+    <p-select
+      [options]="statusOptions()"
+      [ngModel]="statusFilter()"
+      (ngModelChange)="statusFilter.set($event); onFilterChange()"
+      optionLabel="label"
+      optionValue="value"
+      [placeholder]="'COMMON.STATUS' | translate"
+    />
+  </div>
+
+  <p-table
+    [value]="rows()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="20"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    [totalRecords]="totalRecords()"
+    [loading]="loading()"
+    (onLazyLoad)="load($event)"
+    dataKey="id"
+  >
+    <ng-template #header>
+      <tr>
+        <th>{{ 'DEBT.ROOM' | translate }}</th>
+        <th>{{ 'DEBT.CONTRACT' | translate }}</th>
+        <th pSortableColumn="amount">{{ 'DEBT.AMOUNT' | translate }} <p-sortIcon field="amount" /></th>
+        <th>{{ 'DEBT.REASON' | translate }}</th>
+        <th>{{ 'COMMON.STATUS' | translate }}</th>
+        <th>{{ 'DEBT.COLLECTED' | translate }}</th>
+        <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-debt>
+      <tr>
+        <td>{{ debt.roomCode }} — {{ debt.branchName }}</td>
+        <td>#{{ debt.contractId }}</td>
+        <td>{{ debt.amount | number: '1.0-0' }} ₫</td>
+        <td>{{ debt.reason }}</td>
+        <td>
+          <p-tag
+            [value]="('DEBT.STATUS_' + debt.status) | translate"
+            [severity]="debt.status === 'DA_THU' ? 'success' : 'warn'"
+          />
+        </td>
+        <td>{{ debt.collectedAmount | number: '1.0-0' }} ₫</td>
+        <td>
+          @if (debt.status === 'CHUA_THU') {
+            <button
+              type="button"
+              pButton
+              size="small"
+              [label]="'DEBT.COLLECT_ACTION' | translate"
+              (click)="openCollectDialog(debt)"
+            ></button>
+          }
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="7">{{ 'COMMON.NO_DATA' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-dialog
+    [header]="'DEBT.COLLECT_DIALOG_TITLE' | translate"
+    [modal]="true"
+    [visible]="collectDialogVisible()"
+    (visibleChange)="collectDialogVisible.set($event)"
+    [style]="{ width: '24rem' }"
+  >
+    <div class="collect-dialog">
+      <label for="collectAmount">{{ 'DEBT.COLLECT_AMOUNT_LABEL' | translate }}</label>
+      <p-inputnumber
+        inputId="collectAmount"
+        [ngModel]="collectAmount()"
+        (ngModelChange)="collectAmount.set($event)"
+        mode="decimal"
+        [min]="0"
+        suffix=" ₫"
+      />
+    </div>
+
+    <ng-template #footer>
+      <button type="button" pButton severity="danger" [text]="true" [label]="'COMMON.CANCEL' | translate" (click)="collectDialogVisible.set(false)"></button>
+      <button
+        type="button"
+        pButton
+        [label]="'COMMON.SAVE' | translate"
+        [loading]="loading()"
+        (click)="confirmCollect()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+</div>

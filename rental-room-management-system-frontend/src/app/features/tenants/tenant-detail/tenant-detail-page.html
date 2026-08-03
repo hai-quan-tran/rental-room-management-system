@@ -1,0 +1,124 @@
+<div class="detail-page">
+  <div class="detail-page__header">
+    <h2>{{ (isNew() ? 'TENANT.CREATE_TITLE' : 'TENANT.EDIT_TITLE') | translate }}</h2>
+
+    @if (!isNew()) {
+      <div class="detail-page__header-actions">
+        <button
+          type="button"
+          pButton
+          severity="danger"
+          [text]="true"
+          icon="pi pi-trash"
+          [label]="'COMMON.DELETE' | translate"
+          (click)="remove()"
+        ></button>
+      </div>
+    }
+  </div>
+
+  <div class="detail-page__form">
+    <div class="field">
+      <label for="fullName">{{ 'TENANT.FULL_NAME' | translate }}</label>
+      <input id="fullName" type="text" pInputText [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" />
+      @if (submitted() && !fullName()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="dateOfBirth">{{ 'TENANT.DATE_OF_BIRTH' | translate }}</label>
+      <p-datepicker
+        inputId="dateOfBirth"
+        [ngModel]="dateOfBirth()"
+        (ngModelChange)="dateOfBirth.set($event)"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+      />
+      @if (submitted() && !dateOfBirth()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="idCardNumber">{{ 'TENANT.ID_CARD' | translate }}</label>
+      <input
+        id="idCardNumber"
+        type="text"
+        pInputText
+        [ngModel]="idCardNumber()"
+        (ngModelChange)="idCardNumber.set($event)"
+      />
+      @if (submitted() && !idCardNumber()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="phoneNumber">{{ 'TENANT.PHONE' | translate }}</label>
+      <input
+        id="phoneNumber"
+        type="text"
+        pInputText
+        [ngModel]="phoneNumber()"
+        (ngModelChange)="phoneNumber.set($event)"
+      />
+      @if (submitted() && !phoneNumber()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="email">{{ 'TENANT.EMAIL' | translate }}</label>
+      <input id="email" type="email" pInputText [ngModel]="email()" (ngModelChange)="email.set($event)" />
+    </div>
+  </div>
+
+  <div class="detail-page__actions">
+    <button type="button" pButton severity="danger" [text]="true" [label]="'COMMON.CANCEL' | translate" [routerLink]="['/tenants']"></button>
+    <button type="button" pButton [label]="'COMMON.SAVE' | translate" [loading]="loading()" (click)="save()"></button>
+  </div>
+
+  @if (!isNew()) {
+    <div class="detail-page__section">
+      <h3 class="detail-page__section-title">{{ 'TENANT.RENTAL_HISTORY' | translate }}</h3>
+
+      <p-table [value]="rentalHistory()" dataKey="contractId">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'BRANCH.NAME' | translate }}</th>
+            <th>{{ 'ROOM.CODE' | translate }}</th>
+            <th>{{ 'TENANT.RENTAL_PERIOD' | translate }}</th>
+            <th>{{ 'COMMON.STATUS' | translate }}</th>
+            <th>{{ 'TENANT.REPRESENTATIVE' | translate }}</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-item>
+          <tr>
+            <td>{{ item.branchName }}</td>
+            <td>{{ item.roomCode }}</td>
+            <td>{{ item.startDate }} — {{ item.endDate ?? '—' }}</td>
+            <td>
+              <p-tag
+                [value]="('CONTRACT.STATUS_' + item.status) | translate"
+                [severity]="item.status === 'ACTIVE' ? 'success' : 'secondary'"
+              />
+            </td>
+            <td>
+              @if (item.representative) {
+                <p-tag [value]="'TENANT.REPRESENTATIVE_TAG' | translate" severity="info" />
+              }
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="5">{{ 'COMMON.NO_DATA' | translate }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

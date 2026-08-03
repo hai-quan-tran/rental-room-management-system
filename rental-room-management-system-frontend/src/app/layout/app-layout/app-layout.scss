@@ -1,0 +1,29 @@
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+
+  &__topbar {
+    flex: 0 0 auto;
+  }
+
+  &__body {
+    flex: 1 1 auto;
+    display: flex;
+    min-height: 0;
+  }
+
+  &__sidebar {
+    flex: 0 0 240px;
+    border-right: 1px solid var(--p-content-border-color);
+    background: var(--p-content-background);
+    overflow-y: auto;
+  }
+
+  &__content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 1.5rem;
+    background: var(--p-surface-50);
+  }
+}

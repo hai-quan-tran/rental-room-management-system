@@ -1,0 +1,30 @@
+<div class="dashboard">
+  <div class="dashboard__header">
+    <h2>{{ 'DASHBOARD.TITLE' | translate }}</h2>
+
+    @if (isSuperAdmin()) {
+      <p-select
+        [options]="branchOptions()"
+        [ngModel]="selectedBranch()"
+        (ngModelChange)="selectedBranch.set($event)"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="dashboard__branch-select"
+      />
+    }
+  </div>
+
+  <div class="dashboard__grid">
+    <p-card [header]="'DASHBOARD.CHART_ROOM_STATUS' | translate">
+      <p-chart type="bar" [data]="roomStatusData" [options]="chartOptions" height="16rem" />
+    </p-card>
+
+    <p-card [header]="'DASHBOARD.CHART_MOVE_IN_OUT' | translate">
+      <p-chart type="bar" [data]="moveInOutData" [options]="chartOptions" height="16rem" />
+    </p-card>
+
+    <p-card [header]="'DASHBOARD.CHART_REVENUE' | translate" styleClass="dashboard__grid-wide">
+      <p-chart type="line" [data]="revenueData" [options]="chartOptions" height="16rem" />
+    </p-card>
+  </div>
+</div>

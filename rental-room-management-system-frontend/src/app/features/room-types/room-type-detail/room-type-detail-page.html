@@ -1,0 +1,103 @@
+<div class="detail-page">
+  <div class="detail-page__header">
+    <h2>{{ (isNew() ? 'ROOM_TYPE.CREATE_TITLE' : 'ROOM_TYPE.EDIT_TITLE') | translate }}</h2>
+
+    @if (!isNew()) {
+      <div class="detail-page__header-actions">
+        <button
+          type="button"
+          pButton
+          severity="danger"
+          [text]="true"
+          icon="pi pi-trash"
+          [label]="'COMMON.DELETE' | translate"
+          (click)="remove()"
+        ></button>
+      </div>
+    }
+  </div>
+
+  <div class="detail-page__form">
+    <div class="field">
+      <label for="name">{{ 'ROOM_TYPE.NAME' | translate }}</label>
+      <input id="name" type="text" pInputText [ngModel]="name()" (ngModelChange)="name.set($event)" />
+      @if (submitted() && !name()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="area">{{ 'ROOM_TYPE.AREA' | translate }}</label>
+      <input id="area" type="text" pInputText [ngModel]="area()" (ngModelChange)="area.set($event)" />
+    </div>
+
+    <div class="field">
+      <label for="description">{{ 'ROOM_TYPE.DESCRIPTION' | translate }}</label>
+      <textarea
+        id="description"
+        pTextarea
+        rows="3"
+        [ngModel]="description()"
+        (ngModelChange)="description.set($event)"
+      ></textarea>
+    </div>
+  </div>
+
+  <div class="detail-page__section">
+    <h3 class="detail-page__section-title">{{ 'ROOM_TYPE.HANDOVER_ITEMS' | translate }}</h3>
+
+    <div class="handover-items">
+      @for (item of handoverItems(); track item.key) {
+        <div class="handover-items__row">
+          <div class="field">
+            <input
+              type="text"
+              pInputText
+              [ngModel]="item.itemName"
+              (ngModelChange)="item.itemName = $event"
+              [placeholder]="'ROOM_TYPE.ITEM_NAME' | translate"
+            />
+            @if (submitted() && !item.itemName) {
+              <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+            }
+          </div>
+
+          <div class="field" style="max-width: 8rem">
+            <p-inputnumber
+              [ngModel]="item.quantity"
+              (ngModelChange)="item.quantity = $event"
+              [min]="1"
+              [placeholder]="'ROOM_TYPE.QUANTITY' | translate"
+            />
+          </div>
+
+          <div class="field">
+            <input
+              type="text"
+              pInputText
+              [ngModel]="item.note"
+              (ngModelChange)="item.note = $event"
+              [placeholder]="'ROOM_TYPE.NOTE' | translate"
+            />
+          </div>
+
+          <button type="button" pButton severity="danger" [text]="true" icon="pi pi-trash" (click)="removeItem(item.key)"></button>
+        </div>
+      }
+
+      <button
+        type="button"
+        pButton
+        [text]="true"
+        icon="pi pi-plus"
+        [label]="'ROOM_TYPE.ADD_ITEM' | translate"
+        (click)="addItem()"
+      ></button>
+    </div>
+  </div>
+
+  <div class="detail-page__actions">
+    <button type="button" pButton severity="danger" [text]="true" [label]="'COMMON.CANCEL' | translate" [routerLink]="['/room-types']"></button>
+    <button type="button" pButton [label]="'COMMON.SAVE' | translate" [loading]="loading()" (click)="save()"></button>
+  </div>
+</div>

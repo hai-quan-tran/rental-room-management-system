@@ -1,0 +1,200 @@
+/* You can add global styles to this file, and also import other style files */
+@use 'primeicons/primeicons.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--p-font-family, 'Inter', system-ui, sans-serif);
+}
+
+/* p-password renders its <input> with an intrinsic width; stretch it to fill
+   the flex host whenever the host itself is sized to 100% by a parent. */
+.p-password .p-password-input {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+/* Shared layout for every List screen (Accounts/Tenants/Branches/Rooms/DebtRecords):
+   a heading, a filter toolbar, then a lazy-loaded p-table. */
+.list-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  h2 {
+    margin: 0;
+  }
+
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+}
+
+.clickable-row {
+  cursor: pointer;
+
+  &:hover {
+    background: var(--p-content-hover-background, rgba(0, 0, 0, 0.03));
+  }
+}
+
+/* Shared layout for every Detail/Create/Edit screen (Account/Tenant/Branch/RoomType):
+   a heading with header-actions (delete/deactivate), a field grid form, then a save/cancel bar. */
+.detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 48rem;
+
+  /* Room Detail has 4 tabs full of tables (contracts/billing/checkout) —
+     the shared 48rem cap makes it look squeezed to one side, so let it use the full width. */
+  &--wide {
+    max-width: none;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  &__header-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  &__section-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  input,
+  p-select,
+  p-datepicker,
+  p-password,
+  textarea {
+    width: 100%;
+  }
+}
+
+.field-error {
+  color: var(--p-red-500, #ef4444);
+  font-size: 0.8rem;
+}
+
+.handover-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &__row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+
+    .field {
+      flex: 1 1 auto;
+    }
+  }
+}
+
+/* Room Detail screen (Contract/Billing/Checkout tabs) */
+.room-contract-summary,
+.room-checkout-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+
+  span {
+    font-weight: 600;
+  }
+}
+
+.room-checkout-debt {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: var(--p-red-50, #fef2f2);
+  color: var(--p-red-700, #b91c1c);
+}
+
+.room-tenant-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.room-bill-create,
+.room-fee-form,
+.room-payment-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.room-bill-table {
+  margin-bottom: 1.5rem;
+}
+
+.collect-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  p-inputnumber {
+    width: 100%;
+  }
+}
+

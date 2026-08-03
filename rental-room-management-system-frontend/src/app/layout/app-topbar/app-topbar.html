@@ -1,0 +1,40 @@
+<header class="app-topbar">
+  <div class="app-topbar__brand">
+    <i class="pi pi-building"></i>
+    <span>{{ 'APP.TITLE' | translate }}</span>
+  </div>
+
+  <div class="app-topbar__actions">
+    <p-selectbutton
+      [options]="langOptions"
+      [ngModel]="currentLang()"
+      (ngModelChange)="onLangChange($event)"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      size="small"
+    />
+
+    <button
+      type="button"
+      class="app-topbar__user"
+      (click)="toggleUserMenu($event)"
+    >
+      <p-avatar [label]="userInitial()" shape="circle" size="normal" />
+      <span class="app-topbar__user-info">
+        <span class="app-topbar__user-name">{{ currentUser()?.username }}</span>
+        <span class="app-topbar__user-role">{{ 'ROLE.' + currentUser()?.role | translate }}</span>
+      </span>
+      <i class="pi pi-angle-down"></i>
+    </button>
+
+    <p-popover #userMenu>
+      <div class="app-topbar__menu">
+        <button type="button" class="app-topbar__menu-item" (click)="logout()">
+          <i class="pi pi-sign-out"></i>
+          <span>{{ 'AUTH.LOGOUT' | translate }}</span>
+        </button>
+      </div>
+    </p-popover>
+  </div>
+</header>

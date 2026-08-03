@@ -1,0 +1,74 @@
+<div class="detail-page">
+  <div class="detail-page__header">
+    <h2>{{ (isNew() ? 'BRANCH.CREATE_TITLE' : 'BRANCH.EDIT_TITLE') | translate }}</h2>
+  </div>
+
+  <div class="detail-page__form">
+    <div class="field">
+      <label for="name">{{ 'BRANCH.NAME' | translate }}</label>
+      <input id="name" type="text" pInputText [ngModel]="name()" (ngModelChange)="name.set($event)" />
+      @if (submitted() && !name()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="address">{{ 'BRANCH.ADDRESS' | translate }}</label>
+      <input id="address" type="text" pInputText [ngModel]="address()" (ngModelChange)="address.set($event)" />
+      @if (submitted() && !address()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="manager">{{ 'BRANCH.MANAGER' | translate }}</label>
+      <p-select
+        inputId="manager"
+        [options]="managerOptions()"
+        [ngModel]="managerAccountId()"
+        (ngModelChange)="managerAccountId.set($event)"
+        optionLabel="label"
+        optionValue="value"
+        [showClear]="true"
+        [placeholder]="'BRANCH.MANAGER' | translate"
+      />
+    </div>
+  </div>
+
+  <div class="detail-page__actions">
+    <button type="button" pButton severity="danger" [text]="true" [label]="'COMMON.CANCEL' | translate" [routerLink]="['/branches']"></button>
+    <button type="button" pButton [label]="'COMMON.SAVE' | translate" [loading]="loading()" (click)="save()"></button>
+  </div>
+
+  @if (!isNew()) {
+    <div class="detail-page__section">
+      <h3 class="detail-page__section-title">{{ 'BRANCH.ROOM_SUMMARY' | translate }} ({{ totalRooms() }})</h3>
+
+      <p-table [value]="roomTypeSummaries()" dataKey="roomTypeId">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'ROOM.TYPE' | translate }}</th>
+            <th>{{ 'BRANCH.TOTAL' | translate }}</th>
+            <th>{{ 'ROOM.STATUS_TRONG' | translate }}</th>
+            <th>{{ 'ROOM.STATUS_DANG_THUE' | translate }}</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-summary>
+          <tr>
+            <td>{{ summary.roomTypeName }}</td>
+            <td>{{ summary.roomCount }}</td>
+            <td>{{ summary.emptyRoomCount }}</td>
+            <td>{{ summary.occupiedRoomCount }}</td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

@@ -1,0 +1,12 @@
+<nav class="app-sidebar">
+  @for (item of navItems(); track item.path) {
+    <a
+      [routerLink]="item.path"
+      routerLinkActive="app-sidebar__link--active"
+      class="app-sidebar__link"
+    >
+      <i [class]="item.icon"></i>
+      <span>{{ item.labelKey | translate }}</span>
+    </a>
+  }
+</nav>

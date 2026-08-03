@@ -1,0 +1,94 @@
+<div class="list-page">
+  <h2>{{ 'NAV.ACCOUNTS' | translate }}</h2>
+
+  <div class="list-page__filters">
+    <p-iconfield>
+      <p-inputicon class="pi pi-search" />
+      <input
+        type="text"
+        pInputText
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        (keyup.enter)="onFilterChange()"
+        [placeholder]="'ACCOUNT.SEARCH_PLACEHOLDER' | translate"
+      />
+    </p-iconfield>
+
+    <p-select
+      [options]="roleOptions()"
+      [ngModel]="roleFilter()"
+      (ngModelChange)="roleFilter.set($event); onFilterChange()"
+      optionLabel="label"
+      optionValue="value"
+      [placeholder]="'ACCOUNT.ROLE' | translate"
+    />
+
+    <p-select
+      [options]="activeOptions()"
+      [ngModel]="activeFilter()"
+      (ngModelChange)="activeFilter.set($event); onFilterChange()"
+      optionLabel="label"
+      optionValue="value"
+      [placeholder]="'COMMON.STATUS' | translate"
+    />
+
+    <button
+      type="button"
+      pButton
+      icon="pi pi-search"
+      [label]="'COMMON.SEARCH' | translate"
+      (click)="onFilterChange()"
+    ></button>
+
+    <button
+      type="button"
+      pButton
+      icon="pi pi-plus"
+      [label]="'COMMON.ADD_NEW' | translate"
+      (click)="goToCreate()"
+    ></button>
+  </div>
+
+  <p-table
+    [value]="rows()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="20"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    [totalRecords]="totalRecords()"
+    [loading]="loading()"
+    (onLazyLoad)="load($event)"
+    dataKey="id"
+  >
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="fullName">{{ 'ACCOUNT.FULL_NAME' | translate }} <p-sortIcon field="fullName" /></th>
+        <th pSortableColumn="username">{{ 'ACCOUNT.USERNAME' | translate }} <p-sortIcon field="username" /></th>
+        <th>{{ 'ACCOUNT.ROLE' | translate }}</th>
+        <th>{{ 'COMMON.STATUS' | translate }}</th>
+        <th pSortableColumn="createdAt">{{ 'ACCOUNT.CREATED_AT' | translate }} <p-sortIcon field="createdAt" /></th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-account>
+      <tr class="clickable-row" (click)="goToDetail(account.id)">
+        <td>{{ account.fullName }}</td>
+        <td>{{ account.username }}</td>
+        <td>{{ 'ROLE.' + account.role | translate }}</td>
+        <td>
+          <p-tag
+            [value]="(account.active ? 'COMMON.ACTIVE' : 'COMMON.INACTIVE') | translate"
+            [severity]="account.active ? 'success' : 'danger'"
+          />
+        </td>
+        <td>{{ account.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="5">{{ 'COMMON.NO_DATA' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

@@ -1,0 +1,67 @@
+<div class="list-page">
+  <h2>{{ 'NAV.BRANCHES' | translate }}</h2>
+
+  <div class="list-page__filters">
+    <p-iconfield>
+      <p-inputicon class="pi pi-search" />
+      <input
+        type="text"
+        pInputText
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        (keyup.enter)="onFilterChange()"
+        [placeholder]="'BRANCH.SEARCH_PLACEHOLDER' | translate"
+      />
+    </p-iconfield>
+
+    <button
+      type="button"
+      pButton
+      icon="pi pi-search"
+      [label]="'COMMON.SEARCH' | translate"
+      (click)="onFilterChange()"
+    ></button>
+
+    <button
+      type="button"
+      pButton
+      icon="pi pi-plus"
+      [label]="'COMMON.ADD_NEW' | translate"
+      (click)="goToCreate()"
+    ></button>
+  </div>
+
+  <p-table
+    [value]="rows()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="20"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    [totalRecords]="totalRecords()"
+    [loading]="loading()"
+    (onLazyLoad)="load($event)"
+    dataKey="id"
+  >
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="name">{{ 'BRANCH.NAME' | translate }} <p-sortIcon field="name" /></th>
+        <th>{{ 'BRANCH.ADDRESS' | translate }}</th>
+        <th>{{ 'BRANCH.MANAGER' | translate }}</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-branch>
+      <tr class="clickable-row" (click)="goToDetail(branch.id)">
+        <td>{{ branch.name }}</td>
+        <td>{{ branch.address }}</td>
+        <td>{{ branch.managerFullName ?? '—' }}</td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="3">{{ 'COMMON.NO_DATA' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

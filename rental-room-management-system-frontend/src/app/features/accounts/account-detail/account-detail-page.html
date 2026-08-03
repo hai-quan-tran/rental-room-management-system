@@ -1,0 +1,120 @@
+<div class="detail-page">
+  <div class="detail-page__header">
+    <h2>{{ (isNew() ? 'ACCOUNT.CREATE_TITLE' : 'ACCOUNT.EDIT_TITLE') | translate }}</h2>
+
+    @if (!isNew() && account(); as account) {
+      <div class="detail-page__header-actions">
+        <button
+          type="button"
+          pButton
+          [text]="true"
+          [label]="'ACCOUNT.CHANGE_PASSWORD' | translate"
+          icon="pi pi-key"
+          (click)="openPasswordDialog()"
+        ></button>
+        <button
+          type="button"
+          pButton
+          [severity]="account.active ? 'danger' : 'success'"
+          [text]="true"
+          [label]="(account.active ? 'ACCOUNT.DEACTIVATE' : 'ACCOUNT.ACTIVATE') | translate"
+          [icon]="account.active ? 'pi pi-ban' : 'pi pi-check'"
+          (click)="toggleActive()"
+        ></button>
+      </div>
+    }
+  </div>
+
+  <div class="detail-page__form">
+    <div class="field">
+      <label for="fullName">{{ 'ACCOUNT.FULL_NAME' | translate }}</label>
+      <input
+        id="fullName"
+        type="text"
+        pInputText
+        [ngModel]="fullName()"
+        (ngModelChange)="fullName.set($event)"
+      />
+      @if (submitted() && !fullName()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="username">{{ 'ACCOUNT.USERNAME' | translate }}</label>
+      <input
+        id="username"
+        type="text"
+        pInputText
+        [ngModel]="username()"
+        (ngModelChange)="username.set($event)"
+        autocomplete="username"
+      />
+      @if (submitted() && !username()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    @if (isNew()) {
+      <div class="field">
+        <label for="password">{{ 'AUTH.PASSWORD' | translate }}</label>
+        <p-password
+          inputId="password"
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+          [feedback]="false"
+          [toggleMask]="true"
+          autocomplete="new-password"
+        />
+        @if (submitted() && password().length < 6) {
+          <small class="field-error">{{ 'VALIDATION.MIN_LENGTH_6' | translate }}</small>
+        }
+      </div>
+    }
+
+    <div class="field">
+      <label for="role">{{ 'ACCOUNT.ROLE' | translate }}</label>
+      <p-select
+        inputId="role"
+        [options]="roleOptions()"
+        [ngModel]="role()"
+        (ngModelChange)="role.set($event)"
+        optionLabel="label"
+        optionValue="value"
+      />
+    </div>
+  </div>
+
+  <div class="detail-page__actions">
+    <button type="button" pButton severity="danger" [text]="true" [label]="'COMMON.CANCEL' | translate" [routerLink]="['/accounts']"></button>
+    <button type="button" pButton [label]="'COMMON.SAVE' | translate" [loading]="loading()" (click)="save()"></button>
+  </div>
+
+  <p-dialog
+    [header]="'ACCOUNT.CHANGE_PASSWORD' | translate"
+    [modal]="true"
+    [visible]="passwordDialogVisible()"
+    (visibleChange)="passwordDialogVisible.set($event)"
+    [style]="{ width: '24rem' }"
+  >
+    <div class="field">
+      <label for="newPassword">{{ 'ACCOUNT.NEW_PASSWORD' | translate }}</label>
+      <p-password
+        inputId="newPassword"
+        [ngModel]="newPassword()"
+        (ngModelChange)="newPassword.set($event)"
+        [feedback]="false"
+        [toggleMask]="true"
+        autocomplete="new-password"
+      />
+      @if (passwordSubmitted() && newPassword().length < 6) {
+        <small class="field-error">{{ 'VALIDATION.MIN_LENGTH_6' | translate }}</small>
+      }
+    </div>
+
+    <ng-template #footer>
+      <button type="button" pButton severity="danger" [text]="true" [label]="'COMMON.CANCEL' | translate" (click)="passwordDialogVisible.set(false)"></button>
+      <button type="button" pButton [label]="'COMMON.SAVE' | translate" [loading]="loading()" (click)="confirmChangePassword()"></button>
+    </ng-template>
+  </p-dialog>
+</div>

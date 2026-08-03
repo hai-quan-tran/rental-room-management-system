@@ -1,0 +1,104 @@
+<div class="list-page">
+  <h2>{{ 'NAV.ROOMS' | translate }}</h2>
+
+  <div class="list-page__filters">
+    <p-select
+      [options]="branches()"
+      [ngModel]="selectedBranchId()"
+      (ngModelChange)="selectedBranchId.set($event); onBranchChange()"
+      optionLabel="name"
+      optionValue="id"
+      [placeholder]="'ROOM.SELECT_BRANCH' | translate"
+    />
+
+    <p-select
+      [options]="statusOptions()"
+      [ngModel]="statusFilter()"
+      (ngModelChange)="statusFilter.set($event); onFilterChange()"
+      optionLabel="label"
+      optionValue="value"
+      [placeholder]="'COMMON.STATUS' | translate"
+    />
+
+    <p-select
+      [options]="roomTypes()"
+      [ngModel]="roomTypeFilter()"
+      (ngModelChange)="roomTypeFilter.set($event); onFilterChange()"
+      optionLabel="name"
+      optionValue="id"
+      [placeholder]="'ROOM.TYPE' | translate"
+      [showClear]="true"
+    />
+
+    <p-iconfield>
+      <p-inputicon class="pi pi-search" />
+      <input
+        type="text"
+        pInputText
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        (keyup.enter)="onFilterChange()"
+        [placeholder]="'ROOM.SEARCH_PLACEHOLDER' | translate"
+      />
+    </p-iconfield>
+
+    <button
+      type="button"
+      pButton
+      icon="pi pi-search"
+      [label]="'COMMON.SEARCH' | translate"
+      (click)="onFilterChange()"
+    ></button>
+
+    @if (canCreate) {
+      <button
+        type="button"
+        pButton
+        icon="pi pi-plus"
+        [label]="'COMMON.ADD_NEW' | translate"
+        (click)="goToCreate()"
+      ></button>
+    }
+  </div>
+
+  <p-table
+    [value]="rows()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="20"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    [totalRecords]="totalRecords()"
+    [loading]="loading()"
+    (onLazyLoad)="load($event)"
+    dataKey="id"
+  >
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="roomCode">{{ 'ROOM.CODE' | translate }} <p-sortIcon field="roomCode" /></th>
+        <th>{{ 'ROOM.TYPE' | translate }}</th>
+        <th pSortableColumn="monthlyRent">{{ 'ROOM.MONTHLY_RENT' | translate }} <p-sortIcon field="monthlyRent" /></th>
+        <th>{{ 'COMMON.STATUS' | translate }}</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-room>
+      <tr class="clickable-row" (click)="goToDetail(room.id)">
+        <td>{{ room.roomCode }}</td>
+        <td>{{ room.roomTypeName }}</td>
+        <td>{{ room.monthlyRent | number: '1.0-0' }} ₫</td>
+        <td>
+          <p-tag
+            [value]="('ROOM.STATUS_' + room.status) | translate"
+            [severity]="room.status === 'TRONG' ? 'info' : 'success'"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

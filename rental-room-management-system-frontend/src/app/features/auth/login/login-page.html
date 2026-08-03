@@ -1,0 +1,49 @@
+<div class="login-page">
+  <p-selectbutton
+    class="login-page__lang"
+    [options]="langOptions"
+    [ngModel]="currentLang()"
+    (ngModelChange)="onLangChange($event)"
+    optionLabel="label"
+    optionValue="value"
+    [allowEmpty]="false"
+    size="small"
+  />
+
+  <p-card [header]="'AUTH.LOGIN_TITLE' | translate" styleClass="login-page__card">
+    <form class="login-page__form" (ngSubmit)="submit()">
+      <div class="login-page__field">
+        <label for="username">{{ 'AUTH.USERNAME' | translate }}</label>
+        <input
+          id="username"
+          type="text"
+          pInputText
+          [ngModel]="username()"
+          (ngModelChange)="username.set($event)"
+          name="username"
+          autocomplete="username"
+        />
+      </div>
+
+      <div class="login-page__field">
+        <label for="password">{{ 'AUTH.PASSWORD' | translate }}</label>
+        <p-password
+          inputId="password"
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+          name="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          autocomplete="current-password"
+        />
+      </div>
+
+      <p-button
+        type="submit"
+        [label]="'AUTH.LOGIN_BUTTON' | translate"
+        [loading]="loading()"
+        styleClass="login-page__submit"
+      />
+    </form>
+  </p-card>
+</div>
