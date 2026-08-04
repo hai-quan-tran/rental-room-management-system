@@ -10,7 +10,6 @@ import com.rentalroom.management.entity.Contract;
 import com.rentalroom.management.entity.DebtRecord;
 import com.rentalroom.management.entity.Room;
 import com.rentalroom.management.entity.RoomTypeHandoverItem;
-import com.rentalroom.management.enums.ChecklistItemStatus;
 import com.rentalroom.management.enums.ContractStatus;
 import com.rentalroom.management.enums.DebtStatus;
 import com.rentalroom.management.enums.RoomStatus;
@@ -38,6 +37,7 @@ public class CheckoutService {
     private final DebtRecordRepository debtRecordRepository;
     private final BillingService billingService;
     private final BranchService branchService;
+    private final ItemService itemService;
 
     public CheckoutService(ContractRepository contractRepository,
                             RoomRepository roomRepository,
@@ -45,7 +45,8 @@ public class CheckoutService {
                             CheckoutChecklistRepository checkoutChecklistRepository,
                             DebtRecordRepository debtRecordRepository,
                             BillingService billingService,
-                            BranchService branchService) {
+                            BranchService branchService,
+                            ItemService itemService) {
         this.contractRepository = contractRepository;
         this.roomRepository = roomRepository;
         this.handoverItemRepository = handoverItemRepository;
@@ -53,6 +54,7 @@ public class CheckoutService {
         this.debtRecordRepository = debtRecordRepository;
         this.billingService = billingService;
         this.branchService = branchService;
+        this.itemService = itemService;
     }
 
     @Transactional(readOnly = true)
@@ -82,13 +84,6 @@ public class CheckoutService {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Ngày trả phòng không được trước ngày bắt đầu hợp đồng");
         }
 
-        for (CheckoutItemRequest item : request.items()) {
-            if (item.status() == ChecklistItemStatus.CON_NGUYEN && item.deductionAmount().signum() != 0) {
-                throw new BusinessException(ErrorCode.VALIDATION_ERROR,
-                        "Vật dụng còn nguyên thì không được có tiền trừ");
-            }
-        }
-
         contract.setEndDate(request.checkoutDate());
         contractRepository.save(contract);
 
@@ -114,13 +109,25 @@ public class CheckoutService {
         for (CheckoutItemRequest itemRequest : request.items()) {
             RoomTypeHandoverItem handoverItem = handoverItemRepository.findById(itemRequest.roomTypeHandoverItemId())
                     .orElseThrow(() -> BusinessException.notFound("Không tìm thấy vật dụng bàn giao"));
+            int totalQuantity = handoverItem.getQuantity();
+            if (itemRequest.damagedQuantity() + itemRequest.lostQuantity() > totalQuantity) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR,
+                        "Số lượng hư hỏng + mất của \"" + handoverItem.getItem().getName()
+                                + "\" không được vượt quá tổng số lượng (" + totalQuantity + ")");
+            }
             CheckoutChecklistItem checklistItem = new CheckoutChecklistItem();
             checklistItem.setChecklist(checklist);
             checklistItem.setRoomTypeHandoverItem(handoverItem);
-            checklistItem.setStatus(itemRequest.status());
+            checklistItem.setTotalQuantity(totalQuantity);
+            checklistItem.setDamagedQuantity(itemRequest.damagedQuantity());
+            checklistItem.setLostQuantity(itemRequest.lostQuantity());
             checklistItem.setDeductionAmount(itemRequest.deductionAmount());
             checklistItem.setNote(itemRequest.note());
             checklist.getItems().add(checklistItem);
+
+            if (itemRequest.lostQuantity() > 0) {
+                itemService.decrementStock(handoverItem.getItem().getId(), itemRequest.lostQuantity());
+            }
         }
         CheckoutChecklist savedChecklist = checkoutChecklistRepository.save(checklist);
 

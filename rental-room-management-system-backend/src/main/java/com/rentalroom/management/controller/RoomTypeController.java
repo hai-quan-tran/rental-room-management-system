@@ -17,15 +17,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** Room type management — ADMIN_TONG manages, both roles read (used to build room dropdowns). */
+/** Room type management — each room type belongs to exactly 1 branch; both roles manage their own branch's types. */
 @RestController
-@RequestMapping("/api/room-types")
 @PreAuthorize("hasAnyRole('ADMIN_TONG','ADMIN_CAP_1')")
 public class RoomTypeController {
 
@@ -35,44 +33,41 @@ public class RoomTypeController {
         this.roomTypeService = roomTypeService;
     }
 
-    @GetMapping
+    @GetMapping("/api/branches/{branchId}/room-types")
     public ApiResponse<PageResponse<RoomTypeResponse>> list(
+            @PathVariable Long branchId,
             @RequestParam(required = false) String search,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ApiResponse.success(roomTypeService.list(search, pageable));
+        return ApiResponse.success(roomTypeService.list(branchId, search, pageable));
     }
 
-    @GetMapping("/all")
-    public ApiResponse<List<RoomTypeResponse>> listAll() {
-        return ApiResponse.success(roomTypeService.listAll());
+    @GetMapping("/api/branches/{branchId}/room-types/all")
+    public ApiResponse<List<RoomTypeResponse>> listAll(@PathVariable Long branchId) {
+        return ApiResponse.success(roomTypeService.listAll(branchId));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/api/room-types/{id}")
     public ApiResponse<RoomTypeResponse> get(@PathVariable Long id) {
         return ApiResponse.success(roomTypeService.get(id));
     }
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN_TONG')")
-    public ApiResponse<RoomTypeResponse> create(@Valid @RequestBody RoomTypeRequest request) {
-        return ApiResponse.success("Tạo loại phòng thành công", roomTypeService.create(request));
+    @PostMapping("/api/branches/{branchId}/room-types")
+    public ApiResponse<RoomTypeResponse> create(@PathVariable Long branchId, @Valid @RequestBody RoomTypeRequest request) {
+        return ApiResponse.success("Tạo loại phòng thành công", roomTypeService.create(branchId, request));
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_TONG')")
+    @PutMapping("/api/room-types/{id}")
     public ApiResponse<RoomTypeResponse> update(@PathVariable Long id, @Valid @RequestBody RoomTypeRequest request) {
         return ApiResponse.success("Cập nhật loại phòng thành công", roomTypeService.update(id, request));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_TONG')")
+    @DeleteMapping("/api/room-types/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         roomTypeService.delete(id);
         return ApiResponse.success("Xóa loại phòng thành công", null);
     }
 
-    @PutMapping("/{id}/handover-items")
-    @PreAuthorize("hasRole('ADMIN_TONG')")
+    @PutMapping("/api/room-types/{id}/handover-items")
     public ApiResponse<List<HandoverItemResponse>> replaceHandoverItems(
             @PathVariable Long id, @Valid @RequestBody List<HandoverItemRequest> items) {
         return ApiResponse.success("Cập nhật vật dụng bàn giao thành công", roomTypeService.replaceHandoverItems(id, items));

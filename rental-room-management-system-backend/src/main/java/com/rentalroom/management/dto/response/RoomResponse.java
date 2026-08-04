@@ -14,6 +14,8 @@ public record RoomResponse(
         Long roomTypeId,
         String roomTypeName,
         BigDecimal monthlyRent,
+        BigDecimal wifiFee,
+        BigDecimal parkingFee,
         RoomStatus status,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
@@ -27,6 +29,8 @@ public record RoomResponse(
                 room.getRoomType().getId(),
                 room.getRoomType().getName(),
                 room.getMonthlyRent(),
+                room.getWifiFee(),
+                room.getParkingFee(),
                 room.getStatus(),
                 room.getCreatedAt(),
                 room.getUpdatedAt()

@@ -9,6 +9,8 @@ export interface RoomResponse {
   roomTypeId: number;
   roomTypeName: string;
   monthlyRent: number;
+  wifiFee: number;
+  parkingFee: number;
   status: RoomStatus;
   createdAt: string;
   updatedAt: string;
@@ -23,6 +25,8 @@ export interface RoomRequest {
   roomCode: string;
   roomTypeId: number;
   monthlyRent: number;
+  wifiFee: number;
+  parkingFee: number;
 }
 
 export interface RoomDetailResponse {

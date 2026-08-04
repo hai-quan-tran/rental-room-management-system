@@ -18,7 +18,8 @@ const NAV_ITEMS: NavItem[] = [
   { labelKey: 'NAV.TENANTS', icon: 'pi pi-id-card', path: '/tenants', roles: [Role.ADMIN_TONG, Role.ADMIN_CAP_1] },
   { labelKey: 'NAV.BRANCHES', icon: 'pi pi-building', path: '/branches', roles: [Role.ADMIN_TONG] },
   { labelKey: 'NAV.ROOMS', icon: 'pi pi-home', path: '/rooms', roles: [Role.ADMIN_TONG, Role.ADMIN_CAP_1] },
-  { labelKey: 'NAV.ROOM_TYPES', icon: 'pi pi-list', path: '/room-types', roles: [Role.ADMIN_TONG] },
+  { labelKey: 'NAV.ROOM_TYPES', icon: 'pi pi-list', path: '/room-types', roles: [Role.ADMIN_TONG, Role.ADMIN_CAP_1] },
+  { labelKey: 'NAV.ITEMS', icon: 'pi pi-box', path: '/items', roles: [Role.ADMIN_TONG, Role.ADMIN_CAP_1] },
   { labelKey: 'NAV.DEBT_RECORDS', icon: 'pi pi-wallet', path: '/debt-records', roles: [Role.ADMIN_TONG, Role.ADMIN_CAP_1] },
   { labelKey: 'NAV.MONTHLY_BILLS', icon: 'pi pi-receipt', path: '/monthly-bills', roles: [Role.ADMIN_TONG, Role.ADMIN_CAP_1] },
 ];

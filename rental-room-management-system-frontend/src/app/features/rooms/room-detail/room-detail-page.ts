@@ -18,7 +18,6 @@ import { TextareaModule } from 'primeng/textarea';
 import { Role } from '../../../core/enums/role.enum';
 import { RoomStatus } from '../../../core/enums/room-status.enum';
 import { ContractStatus } from '../../../core/enums/contract-status.enum';
-import { ChecklistItemStatus } from '../../../core/enums/checklist-item-status.enum';
 import { PaymentStatus } from '../../../core/enums/payment-status.enum';
 import { HandoverItemResponse } from '../../../core/models/room-type.model';
 import { RoomTypeOption } from '../../../core/models/room.model';
@@ -67,7 +66,10 @@ interface NewContractTenantRow {
 interface CheckoutItemRow {
   roomTypeHandoverItemId: number;
   itemName: string;
-  status: ChecklistItemStatus;
+  itemPrice: number;
+  totalQuantity: number;
+  damagedQuantity: number;
+  lostQuantity: number;
   deductionAmount: number;
   note: string | null;
 }
@@ -123,6 +125,8 @@ export class RoomDetailPage implements OnInit {
   readonly roomCode = signal('');
   readonly roomTypeId = signal<number | null>(null);
   readonly monthlyRent = signal<number | null>(null);
+  readonly wifiFee = signal<number | null>(null);
+  readonly parkingFee = signal<number | null>(null);
   readonly status = signal<RoomStatus | null>(null);
   readonly roomTypeOptions = signal<RoomTypeOption[]>([]);
   readonly handoverItems = signal<HandoverItemResponse[]>([]);
@@ -191,27 +195,17 @@ export class RoomDetailPage implements OnInit {
   readonly checkoutNote = signal('');
   readonly checkoutSubmitted = signal(false);
 
-  readonly checklistStatusOptions = translatedOptions(this.translate, [
-    { labelKey: 'CHECKOUT.STATUS_CON_NGUYEN', value: ChecklistItemStatus.CON_NGUYEN },
-    { labelKey: 'CHECKOUT.STATUS_HU_HONG', value: ChecklistItemStatus.HU_HONG },
-    { labelKey: 'CHECKOUT.STATUS_MAT', value: ChecklistItemStatus.MAT },
-  ]);
-
   onTabChange(value: string | number | undefined): void {
     this.activeTab.set(value?.toString() ?? '0');
   }
 
   ngOnInit(): void {
-    this.roomTypeService.listAll().subscribe({
-      next: (types) => this.roomTypeOptions.set(types),
-      error: () => {},
-    });
-
     const idParam = this.route.snapshot.paramMap.get('id');
     if (!idParam || idParam === 'new') {
       const branchIdParam = this.route.snapshot.queryParamMap.get('branchId');
       this.branchId = Number(branchIdParam);
       this.status.set(RoomStatus.TRONG);
+      this.loadRoomTypeOptions();
       return;
     }
 
@@ -220,17 +214,27 @@ export class RoomDetailPage implements OnInit {
     this.loadContracts();
   }
 
+  private loadRoomTypeOptions(): void {
+    this.roomTypeService.listAll(this.branchId).subscribe({
+      next: (types) => this.roomTypeOptions.set(types),
+      error: () => {},
+    });
+  }
+
   private loadRoom(): void {
     this.roomService.get(this.roomId!).subscribe({
       next: (detail) => {
         this.roomCode.set(detail.room.roomCode);
         this.roomTypeId.set(detail.room.roomTypeId);
         this.monthlyRent.set(detail.room.monthlyRent);
+        this.wifiFee.set(detail.room.wifiFee);
+        this.parkingFee.set(detail.room.parkingFee);
         this.status.set(detail.room.status);
         this.branchId = detail.room.branchId;
         this.branchName.set(detail.room.branchName);
         this.handoverItems.set(detail.handoverItems);
         this.buildCheckoutItems();
+        this.loadRoomTypeOptions();
         if (this.newContractDeposit() === null) {
           this.newContractDeposit.set(detail.room.monthlyRent);
         }
@@ -288,7 +292,13 @@ export class RoomDetailPage implements OnInit {
       return;
     }
 
-    const request = { roomCode: this.roomCode(), roomTypeId: this.roomTypeId()!, monthlyRent: this.monthlyRent()! };
+    const request = {
+      roomCode: this.roomCode(),
+      roomTypeId: this.roomTypeId()!,
+      monthlyRent: this.monthlyRent()!,
+      wifiFee: this.wifiFee() ?? 0,
+      parkingFee: this.parkingFee() ?? 0,
+    };
     const save$ = this.isNew()
       ? this.roomService.create(this.branchId, request)
       : this.roomService.update(this.roomId!, request);
@@ -326,11 +336,26 @@ export class RoomDetailPage implements OnInit {
       this.handoverItems().map((item) => ({
         roomTypeHandoverItemId: item.id,
         itemName: item.itemName,
-        status: ChecklistItemStatus.CON_NGUYEN,
+        itemPrice: item.itemPrice,
+        totalQuantity: item.quantity,
+        damagedQuantity: 0,
+        lostQuantity: 0,
         deductionAmount: 0,
         note: null,
       })),
     );
+  }
+
+  intactQuantity(row: CheckoutItemRow): number {
+    return row.totalQuantity - row.damagedQuantity - row.lostQuantity;
+  }
+
+  checkoutQuantityExceedsTotal(row: CheckoutItemRow): boolean {
+    return row.damagedQuantity + row.lostQuantity > row.totalQuantity;
+  }
+
+  hasCheckoutQuantityError(): boolean {
+    return this.checkoutItems().some((row) => this.checkoutQuantityExceedsTotal(row));
   }
 
   // ---- Tab 2: hợp đồng & người thuê ----
@@ -612,17 +637,15 @@ export class RoomDetailPage implements OnInit {
   }
 
   // ---- Tab 4: trả phòng ----
-  onCheckoutItemStatusChange(row: CheckoutItemRow): void {
-    if (row.status === ChecklistItemStatus.CON_NGUYEN) {
-      row.deductionAmount = 0;
-    }
+  onCheckoutItemQuantityChange(row: CheckoutItemRow): void {
+    row.deductionAmount = (row.damagedQuantity + row.lostQuantity) * row.itemPrice;
   }
 
   submitCheckout(): void {
     this.checkoutSubmitted.set(true);
     const contract = this.activeContract();
     const checkoutDate = this.checkoutDate();
-    if (!contract || !checkoutDate) {
+    if (!contract || !checkoutDate || this.hasCheckoutQuantityError()) {
       return;
     }
 
@@ -633,7 +656,8 @@ export class RoomDetailPage implements OnInit {
           note: this.checkoutNote() || null,
           items: this.checkoutItems().map((row) => ({
             roomTypeHandoverItemId: row.roomTypeHandoverItemId,
-            status: row.status,
+            damagedQuantity: row.damagedQuantity,
+            lostQuantity: row.lostQuantity,
             deductionAmount: row.deductionAmount,
             note: row.note || null,
           })),

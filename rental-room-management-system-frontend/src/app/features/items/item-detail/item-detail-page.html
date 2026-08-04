@@ -1,0 +1,78 @@
+<div class="detail-page">
+  <div class="detail-page__header">
+    <h2>{{ (isNew() ? 'ITEM.CREATE_TITLE' : 'ITEM.EDIT_TITLE') | translate }}</h2>
+
+    @if (!isNew()) {
+      <div class="detail-page__header-actions">
+        <button
+          type="button"
+          pButton
+          severity="danger"
+          [text]="true"
+          icon="pi pi-trash"
+          [label]="'COMMON.DELETE' | translate"
+          (click)="remove()"
+        ></button>
+      </div>
+    }
+  </div>
+
+  <div class="detail-page__form">
+    @if (!isNew()) {
+      <div class="field">
+        <label>{{ 'BRANCH.NAME' | translate }}</label>
+        <input type="text" pInputText [value]="branchName()" [disabled]="true" />
+      </div>
+    }
+
+    <div class="field">
+      <label for="name">{{ 'ITEM.NAME' | translate }}</label>
+      <input id="name" type="text" pInputText [ngModel]="name()" (ngModelChange)="name.set($event)" />
+      @if (submitted() && !name()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="price">{{ 'ITEM.PRICE' | translate }}</label>
+      <p-inputnumber inputId="price" [ngModel]="price()" (ngModelChange)="price.set($event)" mode="decimal" [min]="0" suffix=" ₫" />
+      @if (submitted() && price() === null) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="quantityAvailable">{{ 'ITEM.QUANTITY_AVAILABLE' | translate }}</label>
+      <p-inputnumber
+        inputId="quantityAvailable"
+        [ngModel]="quantityAvailable()"
+        (ngModelChange)="quantityAvailable.set($event)"
+        [min]="0"
+      />
+      @if (submitted() && quantityAvailable() === null) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="defaultQuantityPerRoom">{{ 'ITEM.DEFAULT_QUANTITY_PER_ROOM' | translate }}</label>
+      <p-inputnumber
+        inputId="defaultQuantityPerRoom"
+        [ngModel]="defaultQuantityPerRoom()"
+        (ngModelChange)="defaultQuantityPerRoom.set($event)"
+        [min]="1"
+      />
+      @if (submitted() && !defaultQuantityPerRoom()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+      @if (defaultQuantityExceedsStock()) {
+        <small class="field-error">{{ 'ITEM.DEFAULT_QUANTITY_EXCEEDS_STOCK' | translate }}</small>
+      }
+    </div>
+  </div>
+
+  <div class="detail-page__actions">
+    <button type="button" pButton severity="danger" [text]="true" [label]="'COMMON.CANCEL' | translate" [routerLink]="['/items']"></button>
+    <button type="button" pButton [label]="'COMMON.SAVE' | translate" [loading]="loading()" (click)="save()"></button>
+  </div>
+</div>

@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -38,19 +39,22 @@ public class RoomService {
     private final RoomTypeHandoverItemRepository handoverItemRepository;
     private final ContractRepository contractRepository;
     private final BranchService branchService;
+    private final ItemService itemService;
 
     public RoomService(RoomRepository roomRepository,
                         BranchRepository branchRepository,
                         RoomTypeRepository roomTypeRepository,
                         RoomTypeHandoverItemRepository handoverItemRepository,
                         ContractRepository contractRepository,
-                        BranchService branchService) {
+                        BranchService branchService,
+                        ItemService itemService) {
         this.roomRepository = roomRepository;
         this.branchRepository = branchRepository;
         this.roomTypeRepository = roomTypeRepository;
         this.handoverItemRepository = handoverItemRepository;
         this.contractRepository = contractRepository;
         this.branchService = branchService;
+        this.itemService = itemService;
     }
 
     @Transactional(readOnly = true)
@@ -103,12 +107,18 @@ public class RoomService {
             throw BusinessException.conflict("Mã phòng đã tồn tại trong chi nhánh này");
         }
         RoomType roomType = findRoomType(request.roomTypeId());
+        if (!roomType.getBranch().getId().equals(branchId)) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Loại phòng không thuộc chi nhánh này");
+        }
+        itemService.assertSufficientStock(branchId, Map.of(roomType.getId(), 1));
 
         Room room = new Room();
         room.setBranch(branch);
         room.setRoomCode(request.roomCode());
         room.setRoomType(roomType);
         room.setMonthlyRent(request.monthlyRent());
+        room.setWifiFee(request.wifiFee());
+        room.setParkingFee(request.parkingFee());
         room.setStatus(RoomStatus.TRONG);
         Room saved = roomRepository.save(room);
         branchService.evictRoomTypeSummary(branchId);
@@ -122,13 +132,23 @@ public class RoomService {
                 && roomRepository.existsByBranchIdAndRoomCodeAndIdNot(room.getBranch().getId(), request.roomCode(), id)) {
             throw BusinessException.conflict("Mã phòng đã tồn tại trong chi nhánh này");
         }
-        if (!room.getRoomType().getId().equals(request.roomTypeId())
-                && SecurityUtils.currentUser().role() != Role.ADMIN_TONG) {
+        boolean roomTypeChanged = !room.getRoomType().getId().equals(request.roomTypeId());
+        if (roomTypeChanged && SecurityUtils.currentUser().role() != Role.ADMIN_TONG) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED, "Bạn không có quyền thay đổi loại phòng của phòng này");
         }
+        if (roomTypeChanged) {
+            RoomType newRoomType = findRoomType(request.roomTypeId());
+            if (!newRoomType.getBranch().getId().equals(room.getBranch().getId())) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Loại phòng không thuộc chi nhánh này");
+            }
+            itemService.assertSufficientStock(room.getBranch().getId(),
+                    Map.of(room.getRoomType().getId(), -1, newRoomType.getId(), 1));
+            room.setRoomType(newRoomType);
+        }
         room.setRoomCode(request.roomCode());
-        room.setRoomType(findRoomType(request.roomTypeId()));
         room.setMonthlyRent(request.monthlyRent());
+        room.setWifiFee(request.wifiFee());
+        room.setParkingFee(request.parkingFee());
         Room saved = roomRepository.save(room);
         branchService.evictRoomTypeSummary(room.getBranch().getId());
         return RoomResponse.from(saved);

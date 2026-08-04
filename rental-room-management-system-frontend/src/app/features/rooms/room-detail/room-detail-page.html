@@ -75,6 +75,30 @@
             }
           </div>
 
+          <div class="field">
+            <label for="wifiFee">{{ 'ROOM.WIFI_FEE' | translate }}</label>
+            <p-inputnumber
+              inputId="wifiFee"
+              [ngModel]="wifiFee()"
+              (ngModelChange)="wifiFee.set($event)"
+              mode="decimal"
+              [min]="0"
+              suffix=" ₫"
+            />
+          </div>
+
+          <div class="field">
+            <label for="parkingFee">{{ 'ROOM.PARKING_FEE' | translate }}</label>
+            <p-inputnumber
+              inputId="parkingFee"
+              [ngModel]="parkingFee()"
+              (ngModelChange)="parkingFee.set($event)"
+              mode="decimal"
+              [min]="0"
+              suffix=" ₫"
+            />
+          </div>
+
           @if (!isNew() && status()) {
             <div class="field">
               <label>{{ 'COMMON.STATUS' | translate }}</label>
@@ -476,7 +500,10 @@
             <ng-template #header>
               <tr>
                 <th>{{ 'ROOM_TYPE.ITEM_NAME' | translate }}</th>
-                <th>{{ 'CHECKOUT.ITEM_STATUS' | translate }}</th>
+                <th>{{ 'CHECKOUT.TOTAL_QTY' | translate }}</th>
+                <th>{{ 'CHECKOUT.DAMAGED_QTY' | translate }}</th>
+                <th>{{ 'CHECKOUT.LOST_QTY' | translate }}</th>
+                <th>{{ 'CHECKOUT.INTACT_QTY' | translate }}</th>
                 <th>{{ 'CHECKOUT.DEDUCTION' | translate }}</th>
                 <th>{{ 'ROOM_TYPE.NOTE' | translate }}</th>
               </tr>
@@ -484,15 +511,24 @@
             <ng-template #body let-row>
               <tr>
                 <td>{{ row.itemName }}</td>
+                <td>{{ row.totalQuantity }}</td>
                 <td>
-                  <p-select
-                    [options]="checklistStatusOptions()"
-                    [ngModel]="row.status"
-                    (ngModelChange)="row.status = $event; onCheckoutItemStatusChange(row)"
-                    optionLabel="label"
-                    optionValue="value"
+                  <p-inputnumber
+                    [ngModel]="row.damagedQuantity"
+                    (ngModelChange)="row.damagedQuantity = $event; onCheckoutItemQuantityChange(row)"
+                    [min]="0"
+                    [max]="row.totalQuantity"
                   />
                 </td>
+                <td>
+                  <p-inputnumber
+                    [ngModel]="row.lostQuantity"
+                    (ngModelChange)="row.lostQuantity = $event; onCheckoutItemQuantityChange(row)"
+                    [min]="0"
+                    [max]="row.totalQuantity"
+                  />
+                </td>
+                <td>{{ intactQuantity(row) }}</td>
                 <td>
                   <p-inputnumber
                     [ngModel]="row.deductionAmount"
@@ -500,7 +536,6 @@
                     mode="decimal"
                     [min]="0"
                     suffix=" ₫"
-                    [disabled]="row.status === 'CON_NGUYEN'"
                   />
                 </td>
                 <td>
@@ -509,6 +544,9 @@
               </tr>
             </ng-template>
           </p-table>
+          @if (checkoutSubmitted() && hasCheckoutQuantityError()) {
+            <small class="field-error">{{ 'CHECKOUT.QUANTITY_EXCEEDS_TOTAL' | translate }}</small>
+          }
 
           <div class="detail-page__form">
             <div class="field">
@@ -545,7 +583,10 @@
         <ng-template #header>
           <tr>
             <th>{{ 'ROOM_TYPE.ITEM_NAME' | translate }}</th>
-            <th>{{ 'CHECKOUT.ITEM_STATUS' | translate }}</th>
+            <th>{{ 'CHECKOUT.TOTAL_QTY' | translate }}</th>
+            <th>{{ 'CHECKOUT.DAMAGED_QTY' | translate }}</th>
+            <th>{{ 'CHECKOUT.LOST_QTY' | translate }}</th>
+            <th>{{ 'CHECKOUT.INTACT_QTY' | translate }}</th>
             <th>{{ 'CHECKOUT.DEDUCTION' | translate }}</th>
             <th>{{ 'ROOM_TYPE.NOTE' | translate }}</th>
           </tr>
@@ -553,7 +594,10 @@
         <ng-template #body let-item>
           <tr>
             <td>{{ item.itemName }}</td>
-            <td>{{ ('CHECKOUT.STATUS_' + item.status) | translate }}</td>
+            <td>{{ item.totalQuantity }}</td>
+            <td>{{ item.damagedQuantity }}</td>
+            <td>{{ item.lostQuantity }}</td>
+            <td>{{ item.intactQuantity }}</td>
             <td>{{ item.deductionAmount | number: '1.0-0' }} ₫</td>
             <td>{{ item.note ?? '—' }}</td>
           </tr>

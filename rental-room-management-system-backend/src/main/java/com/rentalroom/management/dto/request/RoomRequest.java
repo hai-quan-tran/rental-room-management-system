@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 public record RoomRequest(
         @NotBlank(message = "Mã phòng không được để trống") String roomCode,
         @NotNull(message = "Loại phòng không được để trống") Long roomTypeId,
-        @NotNull(message = "Giá thuê không được để trống") @DecimalMin(value = "0", message = "Giá thuê không được âm") BigDecimal monthlyRent
+        @NotNull(message = "Giá thuê không được để trống") @DecimalMin(value = "0", message = "Giá thuê không được âm") BigDecimal monthlyRent,
+        @NotNull(message = "Phí wifi không được để trống") @DecimalMin(value = "0", message = "Phí wifi không được âm") BigDecimal wifiFee,
+        @NotNull(message = "Phí gửi xe không được để trống") @DecimalMin(value = "0", message = "Phí gửi xe không được âm") BigDecimal parkingFee
 ) {
 }

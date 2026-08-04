@@ -6,5 +6,4 @@
 INSERT IGNORE INTO extra_fee_category (name, unit) VALUES
     ('Điện', 'kWh'),
     ('Nước', 'm3'),
-    ('Wifi', NULL),
     ('Khác', NULL);

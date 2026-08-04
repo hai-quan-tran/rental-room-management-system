@@ -73,18 +73,28 @@ export class RoomsPage {
         if (branches.length > 0) {
           this.selectedBranchId.set(branches[0].id);
           this.load();
+          this.loadRoomTypes();
         }
       },
       error: () => {},
     });
-    this.roomTypeService.listAll().subscribe({
+  }
+
+  private loadRoomTypes(): void {
+    const branchId = this.selectedBranchId();
+    if (!branchId) {
+      return;
+    }
+    this.roomTypeService.listAll(branchId).subscribe({
       next: (types) => this.roomTypes.set(types),
       error: () => {},
     });
   }
 
   onBranchChange(): void {
+    this.roomTypeFilter.set(null);
     this.load({ first: 0, rows: PAGE_SIZE });
+    this.loadRoomTypes();
   }
 
   load(event?: TableLazyLoadEvent): void {

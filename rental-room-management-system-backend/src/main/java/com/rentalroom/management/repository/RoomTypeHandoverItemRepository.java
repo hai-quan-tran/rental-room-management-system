@@ -9,5 +9,9 @@ public interface RoomTypeHandoverItemRepository extends JpaRepository<RoomTypeHa
 
     List<RoomTypeHandoverItem> findByRoomTypeIdOrderByIdAsc(Long roomTypeId);
 
+    List<RoomTypeHandoverItem> findByRoomType_BranchId(Long branchId);
+
     void deleteByRoomTypeId(Long roomTypeId);
+
+    boolean existsByItemId(Long itemId);
 }

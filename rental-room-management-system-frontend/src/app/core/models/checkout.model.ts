@@ -1,9 +1,9 @@
-import { ChecklistItemStatus } from '../enums/checklist-item-status.enum';
 import { DebtRecordResponse } from './debt-record.model';
 
 export interface CheckoutItemRequest {
   roomTypeHandoverItemId: number;
-  status: ChecklistItemStatus;
+  damagedQuantity: number;
+  lostQuantity: number;
   deductionAmount: number;
   note: string | null;
 }
@@ -18,7 +18,10 @@ export interface CheckoutChecklistItemResponse {
   id: number;
   roomTypeHandoverItemId: number;
   itemName: string;
-  status: ChecklistItemStatus;
+  totalQuantity: number;
+  damagedQuantity: number;
+  lostQuantity: number;
+  intactQuantity: number;
   deductionAmount: number;
   note: string | null;
 }

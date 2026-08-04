@@ -5,16 +5,22 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 
 import { HandoverItemRequest } from '../../../core/models/room-type.model';
+import { ItemOption } from '../../../core/models/item.model';
 import { ConfirmService } from '../../../core/services/confirm.service';
+import { ItemService } from '../../../core/services/item.service';
 import { LoadingService } from '../../../core/services/loading.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { RoomTypeService } from '../../../core/services/room-type.service';
 
-interface HandoverItemRow extends HandoverItemRequest {
+interface HandoverItemRow {
   key: number;
+  itemId: number | null;
+  quantity: number;
+  note: string | null;
 }
 
 let rowKeySeq = 0;
@@ -22,13 +28,23 @@ let rowKeySeq = 0;
 @Component({
   selector: 'app-room-type-detail-page',
   standalone: true,
-  imports: [FormsModule, RouterLink, TranslatePipe, ButtonModule, InputTextModule, TextareaModule, InputNumberModule],
+  imports: [
+    FormsModule,
+    RouterLink,
+    TranslatePipe,
+    ButtonModule,
+    InputTextModule,
+    TextareaModule,
+    InputNumberModule,
+    SelectModule,
+  ],
   templateUrl: './room-type-detail-page.html',
 })
 export class RoomTypeDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly roomTypeService = inject(RoomTypeService);
+  private readonly itemService = inject(ItemService);
   private readonly translate = inject(TranslateService);
   private readonly notification = inject(NotificationService);
   private readonly confirmService = inject(ConfirmService);
@@ -37,18 +53,24 @@ export class RoomTypeDetailPage implements OnInit {
   readonly loading = this.loadingService.isLoading;
 
   private roomTypeId: number | null = null;
+  private branchId!: number;
   readonly isNew = computed(() => this.roomTypeId === null);
+  readonly branchName = signal('');
 
   readonly name = signal('');
   readonly area = signal('');
   readonly description = signal('');
   readonly submitted = signal(false);
 
+  readonly itemOptions = signal<ItemOption[]>([]);
   readonly handoverItems = signal<HandoverItemRow[]>([]);
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
     if (!idParam || idParam === 'new') {
+      const branchIdParam = this.route.snapshot.queryParamMap.get('branchId');
+      this.branchId = Number(branchIdParam);
+      this.loadItemOptions();
       return;
     }
 
@@ -58,21 +80,57 @@ export class RoomTypeDetailPage implements OnInit {
         this.name.set(roomType.name);
         this.area.set(roomType.area ?? '');
         this.description.set(roomType.description ?? '');
+        this.branchId = roomType.branchId;
+        this.branchName.set(roomType.branchName);
         this.handoverItems.set(
           roomType.handoverItems.map((item) => ({
-            itemName: item.itemName,
+            itemId: item.itemId,
             quantity: item.quantity,
             note: item.note,
             key: rowKeySeq++,
           })),
         );
+        this.loadItemOptions();
       },
       error: () => {},
     });
   }
 
+  private loadItemOptions(): void {
+    this.itemService.listAll(this.branchId).subscribe({
+      next: (options) => this.itemOptions.set(options),
+      error: () => {},
+    });
+  }
+
+  findItem(itemId: number | null): ItemOption | undefined {
+    return this.itemOptions().find((option) => option.id === itemId);
+  }
+
+  /** Excludes items already picked in other rows so the same item can't be added twice. */
+  optionsForRow(row: HandoverItemRow): ItemOption[] {
+    const chosenElsewhere = new Set(
+      this.handoverItems()
+        .filter((r) => r.key !== row.key && r.itemId !== null)
+        .map((r) => r.itemId),
+    );
+    return this.itemOptions().filter((option) => !chosenElsewhere.has(option.id));
+  }
+
+  onItemSelected(row: HandoverItemRow): void {
+    const option = this.findItem(row.itemId);
+    if (option) {
+      row.quantity = option.defaultQuantityPerRoom;
+    }
+  }
+
+  rowExceedsStock(row: HandoverItemRow): boolean {
+    const option = this.findItem(row.itemId);
+    return !!option && row.quantity > option.quantityAvailable;
+  }
+
   addItem(): void {
-    this.handoverItems.update((items) => [...items, { itemName: '', quantity: 1, note: null, key: rowKeySeq++ }]);
+    this.handoverItems.update((items) => [...items, { itemId: null, quantity: 1, note: null, key: rowKeySeq++ }]);
   }
 
   removeItem(key: number): void {
@@ -81,22 +139,29 @@ export class RoomTypeDetailPage implements OnInit {
 
   save(): void {
     this.submitted.set(true);
-    if (!this.name() || this.handoverItems().some((item) => !item.itemName || !item.quantity || item.quantity < 1)) {
+    const items = this.handoverItems();
+    const invalid =
+      !this.name() ||
+      items.some((item) => !item.itemId || !item.quantity || item.quantity < 1) ||
+      items.some((item) => this.rowExceedsStock(item));
+    if (invalid) {
       return;
     }
 
     const request = { name: this.name(), area: this.area() || null, description: this.description() || null };
-    const items: HandoverItemRequest[] = this.handoverItems().map(({ itemName, quantity, note }) => ({
-      itemName,
+    const handoverItemRequests: HandoverItemRequest[] = items.map(({ itemId, quantity, note }) => ({
+      itemId: itemId!,
       quantity,
       note: note || null,
     }));
 
-    const save$ = this.isNew() ? this.roomTypeService.create(request) : this.roomTypeService.update(this.roomTypeId!, request);
+    const save$ = this.isNew()
+      ? this.roomTypeService.create(this.branchId, request)
+      : this.roomTypeService.update(this.roomTypeId!, request);
 
     save$.subscribe({
       next: (roomType) => {
-        this.roomTypeService.replaceHandoverItems(roomType.id, items).subscribe({
+        this.roomTypeService.replaceHandoverItems(roomType.id, handoverItemRequests).subscribe({
           next: () => {
             this.notification.success(
               this.translate.instant(this.isNew() ? 'ROOM_TYPE.CREATE_SUCCESS' : 'ROOM_TYPE.UPDATE_SUCCESS'),

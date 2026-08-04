@@ -141,6 +141,8 @@ public class BillingService {
             bill.setBillYear(billYear);
             bill.setRentAmount(rentAmount);
             bill.setTotalExtraFee(BigDecimal.ZERO);
+            bill.setWifiFee(contract.getRoom().getWifiFee());
+            bill.setParkingFee(contract.getRoom().getParkingFee());
             bill.setPaidAmount(BigDecimal.ZERO);
             MonthlyBill saved = monthlyBillRepository.save(bill);
             entityManager.flush();
@@ -168,6 +170,8 @@ public class BillingService {
         bill.setBillYear(request.billYear());
         bill.setRentAmount(rentAmount);
         bill.setTotalExtraFee(BigDecimal.ZERO);
+        bill.setWifiFee(contract.getRoom().getWifiFee());
+        bill.setParkingFee(contract.getRoom().getParkingFee());
         bill.setPaidAmount(BigDecimal.ZERO);
         MonthlyBill saved = monthlyBillRepository.save(bill);
         entityManager.flush();
@@ -242,6 +246,8 @@ public class BillingService {
                     created.setBillYear(yearMonth.getYear());
                     created.setBillMonth(yearMonth.getMonthValue());
                     created.setTotalExtraFee(BigDecimal.ZERO);
+                    created.setWifiFee(contract.getRoom().getWifiFee());
+                    created.setParkingFee(contract.getRoom().getParkingFee());
                     created.setPaidAmount(BigDecimal.ZERO);
                     return created;
                 });

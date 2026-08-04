@@ -67,13 +67,23 @@ export const routes: Routes = [
       {
         path: 'room-types',
         loadComponent: () => import('./features/room-types/room-types-page').then((m) => m.RoomTypesPage),
-        canActivate: [roleGuard(Role.ADMIN_TONG)],
+        canActivate: [roleGuard(Role.ADMIN_TONG, Role.ADMIN_CAP_1)],
       },
       {
         path: 'room-types/:id',
         loadComponent: () =>
           import('./features/room-types/room-type-detail/room-type-detail-page').then((m) => m.RoomTypeDetailPage),
-        canActivate: [roleGuard(Role.ADMIN_TONG)],
+        canActivate: [roleGuard(Role.ADMIN_TONG, Role.ADMIN_CAP_1)],
+      },
+      {
+        path: 'items',
+        loadComponent: () => import('./features/items/items-page').then((m) => m.ItemsPage),
+        canActivate: [roleGuard(Role.ADMIN_TONG, Role.ADMIN_CAP_1)],
+      },
+      {
+        path: 'items/:id',
+        loadComponent: () => import('./features/items/item-detail/item-detail-page').then((m) => m.ItemDetailPage),
+        canActivate: [roleGuard(Role.ADMIN_TONG, Role.ADMIN_CAP_1)],
       },
       {
         path: 'debt-records',

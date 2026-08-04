@@ -12,21 +12,24 @@ import { ApiService } from './api.service';
 export class RoomTypeService {
   private readonly api = inject(ApiService);
 
-  listAll(): Observable<RoomTypeOption[]> {
-    return this.api.get<RoomTypeOption[]>(`${environment.apiUrl}/room-types/all`);
+  /** Room types belong to exactly 1 branch — every read/write is scoped under that branch. */
+  listAll(branchId: number): Observable<RoomTypeOption[]> {
+    return this.api.get<RoomTypeOption[]>(`${environment.apiUrl}/branches/${branchId}/room-types/all`);
   }
 
-  list(query: ListQuery, search?: string | null): Observable<PageResponse<RoomTypeResponse>> {
+  list(branchId: number, query: ListQuery, search?: string | null): Observable<PageResponse<RoomTypeResponse>> {
     const params = buildListParams(query, { search });
-    return this.api.get<PageResponse<RoomTypeResponse>>(`${environment.apiUrl}/room-types`, { params });
+    return this.api.get<PageResponse<RoomTypeResponse>>(`${environment.apiUrl}/branches/${branchId}/room-types`, {
+      params,
+    });
   }
 
   get(id: number): Observable<RoomTypeResponse> {
     return this.api.get<RoomTypeResponse>(`${environment.apiUrl}/room-types/${id}`);
   }
 
-  create(request: RoomTypeRequest): Observable<RoomTypeResponse> {
-    return this.api.post<RoomTypeResponse>(`${environment.apiUrl}/room-types`, request);
+  create(branchId: number, request: RoomTypeRequest): Observable<RoomTypeResponse> {
+    return this.api.post<RoomTypeResponse>(`${environment.apiUrl}/branches/${branchId}/room-types`, request);
   }
 
   update(id: number, request: RoomTypeRequest): Observable<RoomTypeResponse> {

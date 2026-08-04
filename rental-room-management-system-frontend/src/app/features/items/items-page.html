@@ -1,5 +1,5 @@
 <div class="list-page">
-  <h2>{{ 'NAV.ROOM_TYPES' | translate }}</h2>
+  <h2>{{ 'NAV.ITEMS' | translate }}</h2>
 
   <div class="list-page__filters">
     <p-select
@@ -19,7 +19,7 @@
         [ngModel]="searchTerm()"
         (ngModelChange)="searchTerm.set($event)"
         (keyup.enter)="onFilterChange()"
-        [placeholder]="'ROOM_TYPE.SEARCH_PLACEHOLDER' | translate"
+        [placeholder]="'ITEM.SEARCH_PLACEHOLDER' | translate"
       />
     </p-iconfield>
 
@@ -53,19 +53,19 @@
   >
     <ng-template #header>
       <tr>
-        <th pSortableColumn="name">{{ 'ROOM_TYPE.NAME' | translate }} <p-sortIcon field="name" /></th>
-        <th>{{ 'ROOM_TYPE.AREA' | translate }}</th>
-        <th>{{ 'ROOM_TYPE.DESCRIPTION' | translate }}</th>
-        <th>{{ 'ROOM_TYPE.HANDOVER_ITEM_COUNT' | translate }}</th>
+        <th pSortableColumn="name">{{ 'ITEM.NAME' | translate }} <p-sortIcon field="name" /></th>
+        <th>{{ 'ITEM.PRICE' | translate }}</th>
+        <th>{{ 'ITEM.QUANTITY_AVAILABLE' | translate }}</th>
+        <th>{{ 'ITEM.DEFAULT_QUANTITY_PER_ROOM' | translate }}</th>
       </tr>
     </ng-template>
 
-    <ng-template #body let-roomType>
-      <tr class="clickable-row" (click)="goToDetail(roomType.id)">
-        <td>{{ roomType.name }}</td>
-        <td>{{ roomType.area ?? '—' }}</td>
-        <td>{{ roomType.description ?? '—' }}</td>
-        <td>{{ roomType.handoverItems.length }}</td>
+    <ng-template #body let-item>
+      <tr class="clickable-row" (click)="goToDetail(item.id)">
+        <td>{{ item.name }}</td>
+        <td>{{ item.price | number: '1.0-0' }} ₫</td>
+        <td>{{ item.quantityAvailable }}</td>
+        <td>{{ item.defaultQuantityPerRoom }}</td>
       </tr>
     </ng-template>
 

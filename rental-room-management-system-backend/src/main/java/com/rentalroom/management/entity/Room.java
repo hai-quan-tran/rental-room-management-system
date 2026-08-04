@@ -50,6 +50,12 @@ public class Room {
     @Column(name = "monthly_rent", precision = 15, scale = 0, nullable = false)
     private BigDecimal monthlyRent;
 
+    @Column(name = "wifi_fee", precision = 15, scale = 0, nullable = false)
+    private BigDecimal wifiFee = BigDecimal.ZERO;
+
+    @Column(name = "parking_fee", precision = 15, scale = 0, nullable = false)
+    private BigDecimal parkingFee = BigDecimal.ZERO;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
     private RoomStatus status = RoomStatus.TRONG;

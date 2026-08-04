@@ -1,10 +1,7 @@
 package com.rentalroom.management.entity;
 
-import com.rentalroom.management.enums.ChecklistItemStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -37,15 +34,26 @@ public class CheckoutChecklistItem {
     @JoinColumn(name = "room_type_handover_item_id", nullable = false)
     private RoomTypeHandoverItem roomTypeHandoverItem;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 20, nullable = false)
-    private ChecklistItemStatus status;
+    /** Snapshot of the handover item's configured quantity at checkout time. */
+    @Column(name = "total_quantity", nullable = false)
+    private Integer totalQuantity;
+
+    @Column(name = "damaged_quantity", nullable = false)
+    private Integer damagedQuantity = 0;
+
+    @Column(name = "lost_quantity", nullable = false)
+    private Integer lostQuantity = 0;
 
     @Column(name = "deduction_amount", precision = 15, scale = 0, nullable = false)
     private BigDecimal deductionAmount = BigDecimal.ZERO;
 
     @Column(name = "note", length = 300)
     private String note;
+
+    /** Not persisted — derived from {@code totalQuantity - damagedQuantity - lostQuantity}. */
+    public int getIntactQuantity() {
+        return totalQuantity - damagedQuantity - lostQuantity;
+    }
 
     @Override
     public boolean equals(Object o) {

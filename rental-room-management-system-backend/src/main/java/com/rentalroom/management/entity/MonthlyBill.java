@@ -60,14 +60,22 @@ public class MonthlyBill {
     @Column(name = "total_extra_fee", precision = 15, scale = 0, nullable = false)
     private BigDecimal totalExtraFee = BigDecimal.ZERO;
 
-    /** Generated column ({@code rent_amount + total_extra_fee}) — read-only, DB computes it. */
+    /** Flat monthly fee snapshotted from the room at bill-creation time — never prorated. */
+    @Column(name = "wifi_fee", precision = 15, scale = 0, nullable = false)
+    private BigDecimal wifiFee = BigDecimal.ZERO;
+
+    /** Flat monthly fee snapshotted from the room at bill-creation time — never prorated. */
+    @Column(name = "parking_fee", precision = 15, scale = 0, nullable = false)
+    private BigDecimal parkingFee = BigDecimal.ZERO;
+
+    /** Generated column ({@code rent_amount + total_extra_fee + wifi_fee + parking_fee}) — read-only, DB computes it. */
     @Column(name = "total_amount", precision = 15, scale = 0, insertable = false, updatable = false)
     private BigDecimal totalAmount;
 
     @Column(name = "paid_amount", precision = 15, scale = 0, nullable = false)
     private BigDecimal paidAmount = BigDecimal.ZERO;
 
-    /** Generated column ({@code rent_amount + total_extra_fee - paid_amount}) — read-only. */
+    /** Generated column ({@code rent_amount + total_extra_fee + wifi_fee + parking_fee - paid_amount}) — read-only. */
     @Column(name = "remaining_amount", precision = 15, scale = 0, insertable = false, updatable = false)
     private BigDecimal remainingAmount;
 
