@@ -50,6 +50,11 @@ CREATE TABLE account (
 CREATE INDEX idx_account_role ON account (role);
 CREATE INDEX idx_account_is_active ON account (is_active);
 
+-- Tài khoản mặc định để đăng nhập lần đầu (username/password: admin/admin).
+-- Hash BCrypt (strength 10) của "admin", sinh bằng đúng BCryptPasswordEncoder backend đang dùng.
+INSERT INTO account (full_name, username, password_hash, role, is_active) VALUES
+('Quản trị viên', 'admin', '$2a$10$k7oFeb5exQfAVQFXOoPlAeHTg3Wip9uXRva5VhzOZZ564dANJYjX6', 'ADMIN_TONG', 1);
+
 
 -- =====================================================================================
 -- 2. TENANT — người thuê

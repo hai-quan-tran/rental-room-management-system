@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, forkJoin, map } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { Role } from '../enums/role.enum';
@@ -43,8 +43,11 @@ export class AccountService {
     return this.api.patch<AccountResponse>(`${environment.apiUrl}/accounts/${id}/active`, { active });
   }
 
-  /** Options list for dropdowns (e.g. the branch-manager picker on the Branch screen). */
+  /** Options list for dropdowns (e.g. the branch-manager picker on the Branch screen). Both admin roles are eligible. */
   listManagerOptions(): Observable<AccountResponse[]> {
-    return this.list({ page: 0, size: 100 }, { role: Role.ADMIN_CAP_1 }).pipe(map((page) => page.content));
+    return forkJoin([
+      this.list({ page: 0, size: 100 }, { role: Role.ADMIN_TONG }),
+      this.list({ page: 0, size: 100 }, { role: Role.ADMIN_CAP_1 }),
+    ]).pipe(map(([tong, cap1]) => [...tong.content, ...cap1.content]));
   }
 }
