@@ -56,7 +56,14 @@
     "ALL_BRANCHES": "Tất cả chi nhánh",
     "CHART_ROOM_STATUS": "Phòng trống và phòng đang cho thuê",
     "CHART_MOVE_IN_OUT": "Lượt trả phòng và vào ở theo tháng",
-    "CHART_REVENUE": "Doanh thu tiền thuê theo tháng"
+    "CHART_REVENUE": "Doanh thu tiền thuê theo tháng",
+    "OCCUPANTS_BY_BRANCH": "Số người đang ở theo chi nhánh",
+    "OCCUPANTS_COUNT": "Số người đang ở",
+    "MISSING_INVOICES": "Phòng chưa có hóa đơn tháng trước",
+    "MISSING_INVOICES_HINT": "Hóa đơn tháng trước thường được tạo từ ngày 1 đến ngày 9 hàng tháng. Các phòng sau đây đang cho thuê nhưng chưa có hóa đơn cho tháng",
+    "UNPAID_INVOICES": "Phòng chưa thanh toán đủ hóa đơn",
+    "FROM_MONTH": "Từ tháng",
+    "TO_MONTH": "Đến tháng"
   },
   "ACCOUNT": {
     "FULL_NAME": "Họ tên",
@@ -207,6 +214,7 @@
     "RENT_AMOUNT": "Tiền thuê",
     "TOTAL_EXTRA_FEE": "Chi phí phát sinh",
     "TOTAL_AMOUNT": "Tổng tiền",
+    "PAID_AMOUNT": "Đã thanh toán",
     "REMAINING_AMOUNT": "Còn nợ",
     "STATUS_CHUA_THANH_TOAN": "Chưa thanh toán",
     "STATUS_THANH_TOAN_MOT_PHAN": "Thanh toán một phần",

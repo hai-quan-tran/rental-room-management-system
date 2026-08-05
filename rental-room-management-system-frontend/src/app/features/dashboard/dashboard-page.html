@@ -14,17 +14,124 @@
     }
   </div>
 
+  <div class="dashboard__time-filter">
+    <p-datepicker
+      [ngModel]="fromMonth()"
+      (ngModelChange)="fromMonth.set($event)"
+      view="month"
+      dateFormat="mm/yy"
+      [showIcon]="true"
+      [placeholder]="'DASHBOARD.FROM_MONTH' | translate"
+    />
+    <p-datepicker
+      [ngModel]="toMonth()"
+      (ngModelChange)="toMonth.set($event)"
+      view="month"
+      dateFormat="mm/yy"
+      [showIcon]="true"
+      [placeholder]="'DASHBOARD.TO_MONTH' | translate"
+    />
+  </div>
+
   <div class="dashboard__grid">
     <p-card [header]="'DASHBOARD.CHART_ROOM_STATUS' | translate">
       <p-chart type="bar" [data]="roomStatusData" [options]="chartOptions" height="16rem" />
     </p-card>
 
     <p-card [header]="'DASHBOARD.CHART_MOVE_IN_OUT' | translate">
-      <p-chart type="bar" [data]="moveInOutData" [options]="chartOptions" height="16rem" />
+      <p-chart type="bar" [data]="moveInOutData()" [options]="chartOptions" height="16rem" />
     </p-card>
 
     <p-card [header]="'DASHBOARD.CHART_REVENUE' | translate" styleClass="dashboard__grid-wide">
-      <p-chart type="line" [data]="revenueData" [options]="chartOptions" height="16rem" />
+      <p-chart type="line" [data]="revenueData()" [options]="chartOptions" height="16rem" />
+    </p-card>
+
+    <p-card
+      [header]="'DASHBOARD.OCCUPANTS_BY_BRANCH' | translate"
+      styleClass="dashboard__grid-wide"
+    >
+      <p-table [value]="occupantsByBranch" dataKey="branchName">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'BRANCH.NAME' | translate }}</th>
+            <th>{{ 'DASHBOARD.OCCUPANTS_COUNT' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr>
+            <td>{{ row.branchName }}</td>
+            <td>{{ row.occupantCount }}</td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="2">{{ 'COMMON.NO_DATA' | translate }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+
+    <p-card [header]="'DASHBOARD.MISSING_INVOICES' | translate" styleClass="dashboard__grid-wide">
+      <p class="dashboard__hint">
+        {{ 'DASHBOARD.MISSING_INVOICES_HINT' | translate }} {{ expectedBillPeriod.month }}/{{
+          expectedBillPeriod.year
+        }}.
+      </p>
+      <p-table
+        [value]="missingInvoiceRooms"
+        dataKey="roomCode"
+        [scrollable]="!!missingInvoiceScrollHeight"
+        [scrollHeight]="missingInvoiceScrollHeight"
+      >
+        <ng-template #header>
+          <tr>
+            <th>{{ 'MONTHLY_BILLS.ROOM' | translate }}</th>
+            <th>{{ 'BILLING.MONTH_YEAR' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr>
+            <td>{{ roomBranchLabel(row.roomCode, row.branchName) }}</td>
+            <td>{{ row.missingMonth }}/{{ row.missingYear }}</td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="2">{{ 'COMMON.NO_DATA' | translate }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+
+    <p-card [header]="'DASHBOARD.UNPAID_INVOICES' | translate" styleClass="dashboard__grid-wide">
+      <p-table
+        [value]="unpaidInvoiceRooms"
+        dataKey="roomCode"
+        [scrollable]="!!unpaidInvoiceScrollHeight"
+        [scrollHeight]="unpaidInvoiceScrollHeight"
+      >
+        <ng-template #header>
+          <tr>
+            <th>{{ 'MONTHLY_BILLS.ROOM' | translate }}</th>
+            <th>{{ 'BILLING.TOTAL_AMOUNT' | translate }}</th>
+            <th>{{ 'BILLING.PAID_AMOUNT' | translate }}</th>
+            <th>{{ 'BILLING.REMAINING_AMOUNT' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr>
+            <td>{{ roomBranchLabel(row.roomCode, row.branchName) }}</td>
+            <td>{{ row.totalAmount | number: '1.0-0' }} ₫</td>
+            <td>{{ row.paidAmount | number: '1.0-0' }} ₫</td>
+            <td>{{ row.remainingAmount | number: '1.0-0' }} ₫</td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
     </p-card>
   </div>
 </div>

@@ -56,7 +56,14 @@
     "ALL_BRANCHES": "All branches",
     "CHART_ROOM_STATUS": "Empty vs occupied rooms",
     "CHART_MOVE_IN_OUT": "Move-ins vs move-outs by month",
-    "CHART_REVENUE": "Rent revenue by month"
+    "CHART_REVENUE": "Rent revenue by month",
+    "OCCUPANTS_BY_BRANCH": "Occupants by branch",
+    "OCCUPANTS_COUNT": "Occupants",
+    "MISSING_INVOICES": "Rooms missing last month's bill",
+    "MISSING_INVOICES_HINT": "Last month's bill is normally created between day 1 and day 9 of the current month. The following occupied rooms don't have a bill yet for",
+    "UNPAID_INVOICES": "Rooms with an unpaid bill",
+    "FROM_MONTH": "From month",
+    "TO_MONTH": "To month"
   },
   "ACCOUNT": {
     "FULL_NAME": "Full name",
@@ -207,6 +214,7 @@
     "RENT_AMOUNT": "Rent",
     "TOTAL_EXTRA_FEE": "Extra fees",
     "TOTAL_AMOUNT": "Total",
+    "PAID_AMOUNT": "Paid",
     "REMAINING_AMOUNT": "Remaining",
     "STATUS_CHUA_THANH_TOAN": "Unpaid",
     "STATUS_THANH_TOAN_MOT_PHAN": "Partially paid",
