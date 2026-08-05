@@ -14,6 +14,9 @@ import { DebtRecordResponse } from '../../core/models/debt-record.model';
 import { DebtRecordService } from '../../core/services/debt-record.service';
 import { LoadingService } from '../../core/services/loading.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { toListQuery } from '../../core/utils/list-query.util';
+import { roomBranchLabel } from '../../shared/utils/display.util';
+import { debtStatusSeverity } from '../../shared/utils/status-severity.util';
 import { translatedOptions } from '../../shared/utils/translated-options';
 
 const PAGE_SIZE = 20;
@@ -44,6 +47,8 @@ export class DebtRecordsPage {
   readonly totalRecords = signal(0);
   readonly loading = this.loadingService.isLoading;
   readonly statusFilter = signal<DebtStatus | null>(null);
+  readonly debtStatusSeverity = debtStatusSeverity;
+  readonly roomBranchLabel = roomBranchLabel;
 
   readonly statusOptions = translatedOptions(this.translate, [
     { labelKey: 'COMMON.ALL', value: null },
@@ -59,20 +64,8 @@ export class DebtRecordsPage {
 
   load(event?: TableLazyLoadEvent): void {
     this.lastEvent = event ?? this.lastEvent;
-    const rows = this.lastEvent?.rows ?? PAGE_SIZE;
-    const first = this.lastEvent?.first ?? 0;
-    const page = Math.floor(first / rows);
-
     this.debtRecordService
-      .list(
-        {
-          page,
-          size: rows,
-          sortField: (this.lastEvent?.sortField as string) || undefined,
-          sortOrder: this.lastEvent?.sortOrder === -1 ? 'desc' : 'asc',
-        },
-        this.statusFilter(),
-      )
+      .list(toListQuery(this.lastEvent, PAGE_SIZE), this.statusFilter())
       .subscribe({
         next: (page) => {
           this.rows.set(page.content);

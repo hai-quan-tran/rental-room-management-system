@@ -11,13 +11,23 @@ import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TenantResponse } from '../../core/models/tenant.model';
 import { LoadingService } from '../../core/services/loading.service';
 import { TenantService } from '../../core/services/tenant.service';
+import { toListQuery } from '../../core/utils/list-query.util';
+import { displayOr } from '../../shared/utils/display.util';
 
 const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-tenants-page',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, TableModule, InputTextModule, IconFieldModule, InputIconModule, ButtonModule],
+  imports: [
+    FormsModule,
+    TranslatePipe,
+    TableModule,
+    InputTextModule,
+    IconFieldModule,
+    InputIconModule,
+    ButtonModule,
+  ],
   templateUrl: './tenants-page.html',
 })
 export class TenantsPage {
@@ -29,30 +39,17 @@ export class TenantsPage {
   readonly totalRecords = signal(0);
   readonly loading = this.loadingService.isLoading;
   readonly searchTerm = signal('');
+  readonly displayOr = displayOr;
 
   load(event?: TableLazyLoadEvent): void {
-    const rows = event?.rows ?? PAGE_SIZE;
-    const first = event?.first ?? 0;
-    const page = Math.floor(first / rows);
-
-    this.tenantService
-      .list(
-        {
-          page,
-          size: rows,
-          sortField: (event?.sortField as string) || undefined,
-          sortOrder: event?.sortOrder === -1 ? 'desc' : 'asc',
-        },
-        this.searchTerm() || null,
-      )
-      .subscribe({
-        next: (page) => {
-          this.rows.set(page.content);
-          this.totalRecords.set(page.totalElements);
-        },
-        // Failure is already surfaced globally by the error interceptor's toast.
-        error: () => {},
-      });
+    this.tenantService.list(toListQuery(event, PAGE_SIZE), this.searchTerm() || null).subscribe({
+      next: (page) => {
+        this.rows.set(page.content);
+        this.totalRecords.set(page.totalElements);
+      },
+      // Failure is already surfaced globally by the error interceptor's toast.
+      error: () => {},
+    });
   }
 
   onFilterChange(): void {

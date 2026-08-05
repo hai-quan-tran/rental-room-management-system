@@ -15,6 +15,7 @@ import { Role } from '../../core/enums/role.enum';
 import { AccountResponse } from '../../core/models/account.model';
 import { AccountService } from '../../core/services/account.service';
 import { LoadingService } from '../../core/services/loading.service';
+import { toListQuery } from '../../core/utils/list-query.util';
 import { translatedOptions } from '../../shared/utils/translated-options';
 
 const PAGE_SIZE = 20;
@@ -64,24 +65,12 @@ export class AccountsPage {
   ]);
 
   load(event?: TableLazyLoadEvent): void {
-    const rows = event?.rows ?? PAGE_SIZE;
-    const first = event?.first ?? 0;
-    const page = Math.floor(first / rows);
-
     this.accountService
-      .list(
-        {
-          page,
-          size: rows,
-          sortField: (event?.sortField as string) || undefined,
-          sortOrder: event?.sortOrder === -1 ? 'desc' : 'asc',
-        },
-        {
-          role: this.roleFilter(),
-          active: this.activeFilter(),
-          search: this.searchTerm() || null,
-        },
-      )
+      .list(toListQuery(event, PAGE_SIZE), {
+        role: this.roleFilter(),
+        active: this.activeFilter(),
+        search: this.searchTerm() || null,
+      })
       .subscribe({
         next: (page) => {
           this.rows.set(page.content);

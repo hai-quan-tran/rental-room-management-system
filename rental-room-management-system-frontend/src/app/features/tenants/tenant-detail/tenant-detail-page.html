@@ -20,7 +20,13 @@
   <div class="detail-page__form">
     <div class="field">
       <label for="fullName">{{ 'TENANT.FULL_NAME' | translate }}</label>
-      <input id="fullName" type="text" pInputText [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" />
+      <input
+        id="fullName"
+        type="text"
+        pInputText
+        [ngModel]="fullName()"
+        (ngModelChange)="fullName.set($event)"
+      />
       @if (submitted() && !fullName()) {
         <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
       }
@@ -70,13 +76,32 @@
 
     <div class="field">
       <label for="email">{{ 'TENANT.EMAIL' | translate }}</label>
-      <input id="email" type="email" pInputText [ngModel]="email()" (ngModelChange)="email.set($event)" />
+      <input
+        id="email"
+        type="email"
+        pInputText
+        [ngModel]="email()"
+        (ngModelChange)="email.set($event)"
+      />
     </div>
   </div>
 
   <div class="detail-page__actions">
-    <button type="button" pButton severity="danger" [text]="true" [label]="'COMMON.CANCEL' | translate" [routerLink]="['/tenants']"></button>
-    <button type="button" pButton [label]="'COMMON.SAVE' | translate" [loading]="loading()" (click)="save()"></button>
+    <button
+      type="button"
+      pButton
+      severity="danger"
+      [text]="true"
+      [label]="'COMMON.CANCEL' | translate"
+      [routerLink]="['/tenants']"
+    ></button>
+    <button
+      type="button"
+      pButton
+      [label]="'COMMON.SAVE' | translate"
+      [loading]="loading()"
+      (click)="save()"
+    ></button>
   </div>
 
   @if (!isNew()) {
@@ -98,10 +123,10 @@
           <tr>
             <td>{{ item.branchName }}</td>
             <td>{{ item.roomCode }}</td>
-            <td>{{ item.startDate }} — {{ item.endDate ?? '—' }}</td>
+            <td>{{ item.startDate }} — {{ displayOr(item.endDate) }}</td>
             <td>
               <p-tag
-                [value]="('CONTRACT.STATUS_' + item.status) | translate"
+                [value]="'CONTRACT.STATUS_' + item.status | translate"
                 [severity]="item.status === 'ACTIVE' ? 'success' : 'secondary'"
               />
             </td>

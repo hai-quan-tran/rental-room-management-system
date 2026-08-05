@@ -13,19 +13,8 @@ import { ConfirmService } from '../../../core/services/confirm.service';
 import { LoadingService } from '../../../core/services/loading.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { TenantService } from '../../../core/services/tenant.service';
-
-/** ISO "yyyy-MM-dd" <-> local Date, avoiding the UTC-midnight shift `new Date(iso)` causes. */
-function fromIsoDate(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
-
-function toIsoDate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
+import { fromIsoDate, toIsoDate } from '../../../core/utils/date.util';
+import { displayOr } from '../../../shared/utils/display.util';
 
 @Component({
   selector: 'app-tenant-detail-page',
@@ -52,6 +41,7 @@ export class TenantDetailPage implements OnInit {
   private readonly loadingService = inject(LoadingService);
 
   readonly loading = this.loadingService.isLoading;
+  readonly displayOr = displayOr;
 
   private tenantId: number | null = null;
   readonly isNew = computed(() => this.tenantId === null);

@@ -56,7 +56,7 @@
         <td>{{ tenant.fullName }}</td>
         <td>{{ tenant.idCardNumber }}</td>
         <td>{{ tenant.phoneNumber }}</td>
-        <td>{{ tenant.email ?? '—' }}</td>
+        <td>{{ displayOr(tenant.email) }}</td>
       </tr>
     </ng-template>
 

@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Read(//d/Project/rental-room-management-system/rental-room-management-system-backend/src/main/java/com/rentalroom/management/exception/**)"
+      "Read(//d/Project/rental-room-management-system/rental-room-management-system-backend/src/main/java/com/rentalroom/management/exception/**)",
+      "Bash(npx ng *)"
     ]
   }
 }

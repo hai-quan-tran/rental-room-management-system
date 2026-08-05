@@ -27,16 +27,12 @@ import { ExtraFeeCategoryService } from '../../core/services/extra-fee-category.
 import { LoadingService } from '../../core/services/loading.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { RoomService } from '../../core/services/room.service';
+import { dateToYearMonth, toIsoDate } from '../../core/utils/date.util';
+import { toListQuery } from '../../core/utils/list-query.util';
+import { displayOr, roomBranchLabel } from '../../shared/utils/display.util';
+import { paymentStatusSeverity } from '../../shared/utils/status-severity.util';
 
 const PAGE_SIZE = 20;
-
-/** Local Date -> ISO "yyyy-MM-dd", avoiding the UTC-midnight shift `date.toISOString()` causes. */
-function toIsoDate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
 
 @Component({
   selector: 'app-monthly-bills-page',
@@ -68,6 +64,9 @@ export class MonthlyBillsPage implements OnInit {
 
   readonly loading = this.loadingService.isLoading;
   readonly isAdminTong = this.authService.hasRole(Role.ADMIN_TONG);
+  readonly paymentStatusSeverity = paymentStatusSeverity;
+  readonly roomBranchLabel = roomBranchLabel;
+  readonly displayOr = displayOr;
 
   readonly rows = signal<MonthlyBillListItem[]>([]);
   readonly totalRecords = signal(0);
@@ -112,24 +111,14 @@ export class MonthlyBillsPage implements OnInit {
 
   load(event?: TableLazyLoadEvent): void {
     this.lastEvent = event ?? this.lastEvent;
-    const rows = this.lastEvent?.rows ?? PAGE_SIZE;
-    const first = this.lastEvent?.first ?? 0;
-    const page = Math.floor(first / rows);
+    const { year: billYear, month: billMonth } = dateToYearMonth(this.billPeriod());
 
     this.billingService
-      .listAll(
-        {
-          page,
-          size: rows,
-          sortField: (this.lastEvent?.sortField as string) || undefined,
-          sortOrder: this.lastEvent?.sortOrder === -1 ? 'desc' : 'asc',
-        },
-        {
-          billYear: this.billPeriod().getFullYear(),
-          billMonth: this.billPeriod().getMonth() + 1,
-          branchId: this.isAdminTong ? this.branchFilter() : null,
-        },
-      )
+      .listAll(toListQuery(this.lastEvent, PAGE_SIZE), {
+        billYear,
+        billMonth,
+        branchId: this.isAdminTong ? this.branchFilter() : null,
+      })
       .subscribe({
         next: (page) => {
           this.rows.set(page.content);
@@ -144,14 +133,17 @@ export class MonthlyBillsPage implements OnInit {
   }
 
   confirmBulkCreate(): void {
-    this.confirmService.confirm(this.translate.instant('MONTHLY_BILLS.BULK_CREATE_CONFIRM'), () => this.bulkCreate());
+    this.confirmService.confirm(this.translate.instant('MONTHLY_BILLS.BULK_CREATE_CONFIRM'), () =>
+      this.bulkCreate(),
+    );
   }
 
   private bulkCreate(): void {
+    const { year: billYear, month: billMonth } = dateToYearMonth(this.billPeriod());
     this.billingService
       .bulkCreate({
-        billMonth: this.billPeriod().getMonth() + 1,
-        billYear: this.billPeriod().getFullYear(),
+        billMonth,
+        billYear,
         branchId: this.isAdminTong ? this.branchFilter() : null,
       })
       .subscribe({

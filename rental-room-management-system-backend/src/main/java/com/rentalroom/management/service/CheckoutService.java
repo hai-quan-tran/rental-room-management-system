@@ -1,5 +1,7 @@
 package com.rentalroom.management.service;
 
+import com.rentalroom.management.common.util.DateValidationUtils;
+import com.rentalroom.management.common.util.MoneyUtils;
 import com.rentalroom.management.dto.request.CheckoutItemRequest;
 import com.rentalroom.management.dto.request.CheckoutRequest;
 import com.rentalroom.management.dto.response.CheckoutResponse;
@@ -80,9 +82,8 @@ public class CheckoutService {
         if (contract.getStatus() != ContractStatus.ACTIVE) {
             throw BusinessException.conflict("Hợp đồng đã kết thúc trước đó");
         }
-        if (request.checkoutDate().isBefore(contract.getStartDate())) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Ngày trả phòng không được trước ngày bắt đầu hợp đồng");
-        }
+        DateValidationUtils.assertNotBefore(
+                request.checkoutDate(), contract.getStartDate(), "Ngày trả phòng không được trước ngày bắt đầu hợp đồng");
 
         contract.setEndDate(request.checkoutDate());
         contractRepository.save(contract);
@@ -94,7 +95,7 @@ public class CheckoutService {
 
         BigDecimal itemsDeduction = request.items().stream()
                 .map(CheckoutItemRequest::deductionAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .collect(MoneyUtils.summing());
         BigDecimal totalDeduction = itemsDeduction.add(outstandingBillDebt);
         BigDecimal depositRefund = contract.getDepositAmount().subtract(totalDeduction).max(BigDecimal.ZERO);
 

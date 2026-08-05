@@ -54,7 +54,7 @@
       <tr class="clickable-row" (click)="goToDetail(branch.id)">
         <td>{{ branch.name }}</td>
         <td>{{ branch.address }}</td>
-        <td>{{ branch.managerFullName ?? '—' }}</td>
+        <td>{{ displayOr(branch.managerFullName) }}</td>
       </tr>
     </ng-template>
 

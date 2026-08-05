@@ -6,7 +6,6 @@ import com.rentalroom.management.dto.response.MoveInOutPointResponse;
 import com.rentalroom.management.dto.response.RevenuePointResponse;
 import com.rentalroom.management.dto.response.RoomStatusChartResponse;
 import com.rentalroom.management.entity.Branch;
-import com.rentalroom.management.enums.Role;
 import com.rentalroom.management.enums.RoomStatus;
 import com.rentalroom.management.repository.BranchRepository;
 import com.rentalroom.management.repository.DashboardRepository;
@@ -47,10 +46,8 @@ public class DashboardService {
     @Cacheable(cacheNames = RedisConfig.CACHE_DASHBOARD,
             key = "(#branchId != null ? #branchId : 'ALL') + ':' + T(com.rentalroom.management.security.SecurityUtils).currentUser().userId()")
     public DashboardResponse getDashboard(Long branchId) {
-        var user = SecurityUtils.currentUser();
-        List<Long> branchIds = user.role() == Role.ADMIN_CAP_1
-                ? user.branchIds()
-                : (branchId != null ? List.of(branchId) : branchRepository.findAll().stream().map(Branch::getId).toList());
+        List<Long> branchIds = SecurityUtils.resolveBranchScope(
+                branchId, () -> branchRepository.findAll().stream().map(Branch::getId).toList());
 
         if (branchIds.isEmpty()) {
             return new DashboardResponse(new RoomStatusChartResponse(0, 0), List.of(), List.of());

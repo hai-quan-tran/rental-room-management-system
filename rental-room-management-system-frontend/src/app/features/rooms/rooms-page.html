@@ -74,9 +74,13 @@
   >
     <ng-template #header>
       <tr>
-        <th pSortableColumn="roomCode">{{ 'ROOM.CODE' | translate }} <p-sortIcon field="roomCode" /></th>
+        <th pSortableColumn="roomCode">
+          {{ 'ROOM.CODE' | translate }} <p-sortIcon field="roomCode" />
+        </th>
         <th>{{ 'ROOM.TYPE' | translate }}</th>
-        <th pSortableColumn="monthlyRent">{{ 'ROOM.MONTHLY_RENT' | translate }} <p-sortIcon field="monthlyRent" /></th>
+        <th pSortableColumn="monthlyRent">
+          {{ 'ROOM.MONTHLY_RENT' | translate }} <p-sortIcon field="monthlyRent" />
+        </th>
         <th>{{ 'COMMON.STATUS' | translate }}</th>
       </tr>
     </ng-template>
@@ -88,8 +92,8 @@
         <td>{{ room.monthlyRent | number: '1.0-0' }} ₫</td>
         <td>
           <p-tag
-            [value]="('ROOM.STATUS_' + room.status) | translate"
-            [severity]="room.status === 'TRONG' ? 'info' : 'success'"
+            [value]="'ROOM.STATUS_' + room.status | translate"
+            [severity]="roomStatusSeverity(room.status)"
           />
         </td>
       </tr>

@@ -53,7 +53,9 @@
   >
     <ng-template #header>
       <tr>
-        <th pSortableColumn="name">{{ 'ROOM_TYPE.NAME' | translate }} <p-sortIcon field="name" /></th>
+        <th pSortableColumn="name">
+          {{ 'ROOM_TYPE.NAME' | translate }} <p-sortIcon field="name" />
+        </th>
         <th>{{ 'ROOM_TYPE.AREA' | translate }}</th>
         <th>{{ 'ROOM_TYPE.DESCRIPTION' | translate }}</th>
         <th>{{ 'ROOM_TYPE.HANDOVER_ITEM_COUNT' | translate }}</th>
@@ -63,8 +65,8 @@
     <ng-template #body let-roomType>
       <tr class="clickable-row" (click)="goToDetail(roomType.id)">
         <td>{{ roomType.name }}</td>
-        <td>{{ roomType.area ?? '—' }}</td>
-        <td>{{ roomType.description ?? '—' }}</td>
+        <td>{{ displayOr(roomType.area) }}</td>
+        <td>{{ displayOr(roomType.description) }}</td>
         <td>{{ roomType.handoverItems.length }}</td>
       </tr>
     </ng-template>

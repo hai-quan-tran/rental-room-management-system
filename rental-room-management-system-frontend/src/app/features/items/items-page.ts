@@ -15,6 +15,7 @@ import { ItemResponse } from '../../core/models/item.model';
 import { ItemService } from '../../core/services/item.service';
 import { LoadingService } from '../../core/services/loading.service';
 import { RoomService } from '../../core/services/room.service';
+import { toListQuery } from '../../core/utils/list-query.util';
 
 const PAGE_SIZE = 20;
 
@@ -71,21 +72,8 @@ export class ItemsPage {
       return;
     }
 
-    const rows = event?.rows ?? PAGE_SIZE;
-    const first = event?.first ?? 0;
-    const page = Math.floor(first / rows);
-
     this.itemService
-      .list(
-        branchId,
-        {
-          page,
-          size: rows,
-          sortField: (event?.sortField as string) || undefined,
-          sortOrder: event?.sortOrder === -1 ? 'desc' : 'asc',
-        },
-        this.searchTerm() || null,
-      )
+      .list(branchId, toListQuery(event, PAGE_SIZE), this.searchTerm() || null)
       .subscribe({
         next: (page) => {
           this.rows.set(page.content);

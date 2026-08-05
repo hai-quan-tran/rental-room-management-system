@@ -27,7 +27,9 @@
       <tr>
         <th>{{ 'DEBT.ROOM' | translate }}</th>
         <th>{{ 'DEBT.CONTRACT' | translate }}</th>
-        <th pSortableColumn="amount">{{ 'DEBT.AMOUNT' | translate }} <p-sortIcon field="amount" /></th>
+        <th pSortableColumn="amount">
+          {{ 'DEBT.AMOUNT' | translate }} <p-sortIcon field="amount" />
+        </th>
         <th>{{ 'DEBT.REASON' | translate }}</th>
         <th>{{ 'COMMON.STATUS' | translate }}</th>
         <th>{{ 'DEBT.COLLECTED' | translate }}</th>
@@ -37,14 +39,14 @@
 
     <ng-template #body let-debt>
       <tr>
-        <td>{{ debt.roomCode }} — {{ debt.branchName }}</td>
+        <td>{{ roomBranchLabel(debt.roomCode, debt.branchName) }}</td>
         <td>#{{ debt.contractId }}</td>
         <td>{{ debt.amount | number: '1.0-0' }} ₫</td>
         <td>{{ debt.reason }}</td>
         <td>
           <p-tag
-            [value]="('DEBT.STATUS_' + debt.status) | translate"
-            [severity]="debt.status === 'DA_THU' ? 'success' : 'warn'"
+            [value]="'DEBT.STATUS_' + debt.status | translate"
+            [severity]="debtStatusSeverity(debt.status)"
           />
         </td>
         <td>{{ debt.collectedAmount | number: '1.0-0' }} ₫</td>
@@ -89,7 +91,14 @@
     </div>
 
     <ng-template #footer>
-      <button type="button" pButton severity="danger" [text]="true" [label]="'COMMON.CANCEL' | translate" (click)="collectDialogVisible.set(false)"></button>
+      <button
+        type="button"
+        pButton
+        severity="danger"
+        [text]="true"
+        [label]="'COMMON.CANCEL' | translate"
+        (click)="collectDialogVisible.set(false)"
+      ></button>
       <button
         type="button"
         pButton

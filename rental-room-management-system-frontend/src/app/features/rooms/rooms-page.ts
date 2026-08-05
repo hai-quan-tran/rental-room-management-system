@@ -18,6 +18,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { LoadingService } from '../../core/services/loading.service';
 import { RoomTypeService } from '../../core/services/room-type.service';
 import { RoomService } from '../../core/services/room.service';
+import { toListQuery } from '../../core/utils/list-query.util';
+import { roomStatusSeverity } from '../../shared/utils/status-severity.util';
 import { translatedOptions } from '../../shared/utils/translated-options';
 
 const PAGE_SIZE = 20;
@@ -51,6 +53,7 @@ export class RoomsPage {
   readonly roomTypes = signal<RoomTypeOption[]>([]);
   readonly selectedBranchId = signal<number | null>(null);
   readonly canCreate = this.authService.hasRole(Role.ADMIN_TONG);
+  readonly roomStatusSeverity = roomStatusSeverity;
 
   readonly rows = signal<RoomResponse[]>([]);
   readonly totalRecords = signal(0);
@@ -103,25 +106,12 @@ export class RoomsPage {
       return;
     }
 
-    const rows = event?.rows ?? PAGE_SIZE;
-    const first = event?.first ?? 0;
-    const page = Math.floor(first / rows);
-
     this.roomService
-      .list(
-        branchId,
-        {
-          page,
-          size: rows,
-          sortField: (event?.sortField as string) || undefined,
-          sortOrder: event?.sortOrder === -1 ? 'desc' : 'asc',
-        },
-        {
-          status: this.statusFilter(),
-          roomTypeId: this.roomTypeFilter(),
-          search: this.searchTerm() || null,
-        },
-      )
+      .list(branchId, toListQuery(event, PAGE_SIZE), {
+        status: this.statusFilter(),
+        roomTypeId: this.roomTypeFilter(),
+        search: this.searchTerm() || null,
+      })
       .subscribe({
         next: (page) => {
           this.rows.set(page.content);

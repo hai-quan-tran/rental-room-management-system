@@ -21,7 +21,11 @@ import { ContractStatus } from '../../../core/enums/contract-status.enum';
 import { PaymentStatus } from '../../../core/enums/payment-status.enum';
 import { HandoverItemResponse } from '../../../core/models/room-type.model';
 import { RoomTypeOption } from '../../../core/models/room.model';
-import { ContractDetailResponse, ContractResponse, TenantInContractResponse } from '../../../core/models/contract.model';
+import {
+  ContractDetailResponse,
+  ContractResponse,
+  TenantInContractResponse,
+} from '../../../core/models/contract.model';
 import { CheckoutResponse } from '../../../core/models/checkout.model';
 import {
   ExtraFeeItemResponse,
@@ -41,21 +45,13 @@ import { NotificationService } from '../../../core/services/notification.service
 import { RoomTypeService } from '../../../core/services/room-type.service';
 import { RoomService } from '../../../core/services/room.service';
 import { TenantService } from '../../../core/services/tenant.service';
+import { dateToYearMonth, fromIsoDate, toIsoDate } from '../../../core/utils/date.util';
+import { displayOr } from '../../../shared/utils/display.util';
+import {
+  paymentStatusSeverity,
+  roomStatusSeverity,
+} from '../../../shared/utils/status-severity.util';
 import { translatedOptions } from '../../../shared/utils/translated-options';
-
-/** Local Date -> ISO "yyyy-MM-dd", avoiding the UTC-midnight shift `date.toISOString()` causes. */
-function toIsoDate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-/** ISO "yyyy-MM-dd" -> local Date, avoiding the UTC-midnight shift `new Date(iso)` causes. */
-function fromIsoDate(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
 
 interface NewContractTenantRow {
   tenantId: number;
@@ -115,6 +111,9 @@ export class RoomDetailPage implements OnInit {
   readonly loading = this.loadingService.isLoading;
   readonly isAdminTong = this.authService.hasRole(Role.ADMIN_TONG);
   readonly activeTab = signal('0');
+  readonly paymentStatusSeverity = paymentStatusSeverity;
+  readonly roomStatusSeverity = roomStatusSeverity;
+  readonly displayOr = displayOr;
 
   private roomId: number | null = null;
   readonly isNew = computed(() => this.roomId === null);
@@ -134,8 +133,12 @@ export class RoomDetailPage implements OnInit {
 
   // ---- Tab 2: hợp đồng & người thuê ----
   readonly contracts = signal<ContractResponse[]>([]);
-  readonly activeContract = computed(() => this.contracts().find((c) => c.status === ContractStatus.ACTIVE) ?? null);
-  readonly historyContracts = computed(() => this.contracts().filter((c) => c.status === ContractStatus.ENDED));
+  readonly activeContract = computed(
+    () => this.contracts().find((c) => c.status === ContractStatus.ACTIVE) ?? null,
+  );
+  readonly historyContracts = computed(() =>
+    this.contracts().filter((c) => c.status === ContractStatus.ENDED),
+  );
   readonly activeContractDetail = signal<ContractDetailResponse | null>(null);
 
   readonly newContractStartDate = signal<Date | null>(null);
@@ -305,7 +308,9 @@ export class RoomDetailPage implements OnInit {
 
     save$.subscribe({
       next: (room) => {
-        this.notification.success(this.translate.instant(this.isNew() ? 'ROOM.CREATE_SUCCESS' : 'ROOM.UPDATE_SUCCESS'));
+        this.notification.success(
+          this.translate.instant(this.isNew() ? 'ROOM.CREATE_SUCCESS' : 'ROOM.UPDATE_SUCCESS'),
+        );
         if (this.isNew()) {
           this.router.navigate(['/rooms', room.id]);
         } else {
@@ -359,7 +364,10 @@ export class RoomDetailPage implements OnInit {
   }
 
   // ---- Tab 2: hợp đồng & người thuê ----
-  searchTenants(event: AutoCompleteCompleteEvent, target: 'new-contract' | 'active-contract'): void {
+  searchTenants(
+    event: AutoCompleteCompleteEvent,
+    target: 'new-contract' | 'active-contract',
+  ): void {
     this.tenantService.list({ page: 0, size: 10 }, event.query).subscribe({
       next: (page) => {
         if (target === 'new-contract') {
@@ -389,7 +397,9 @@ export class RoomDetailPage implements OnInit {
   }
 
   setNewContractRepresentative(tenantId: number): void {
-    this.newContractTenants.update((rows) => rows.map((t) => ({ ...t, representative: t.tenantId === tenantId })));
+    this.newContractTenants.update((rows) =>
+      rows.map((t) => ({ ...t, representative: t.tenantId === tenantId })),
+    );
   }
 
   createContract(): void {
@@ -406,7 +416,10 @@ export class RoomDetailPage implements OnInit {
         endDate: endDate ? toIsoDate(endDate) : null,
         depositAmount: this.newContractDeposit()!,
         monthlyRent: this.newContractRent(),
-        tenants: this.newContractTenants().map((t) => ({ tenantId: t.tenantId, representative: t.representative })),
+        tenants: this.newContractTenants().map((t) => ({
+          tenantId: t.tenantId,
+          representative: t.representative,
+        })),
       })
       .subscribe({
         next: () => {
@@ -429,14 +442,16 @@ export class RoomDetailPage implements OnInit {
     if (!contract) {
       return;
     }
-    this.contractService.addTenant(contract.id, { tenantId: tenant.id, representative: false }).subscribe({
-      next: (detail) => {
-        this.activeContractDetail.set(detail);
-        this.addTenantQuery.set('');
-        this.notification.success(this.translate.instant('CONTRACT.ADD_TENANT_SUCCESS'));
-      },
-      error: () => {},
-    });
+    this.contractService
+      .addTenant(contract.id, { tenantId: tenant.id, representative: false })
+      .subscribe({
+        next: (detail) => {
+          this.activeContractDetail.set(detail);
+          this.addTenantQuery.set('');
+          this.notification.success(this.translate.instant('CONTRACT.ADD_TENANT_SUCCESS'));
+        },
+        error: () => {},
+      });
   }
 
   removeTenantFromActiveContract(tenantId: number): void {
@@ -539,16 +554,14 @@ export class RoomDetailPage implements OnInit {
     if (!contract) {
       return;
     }
-    const period = this.newBillPeriod();
-    this.billingService
-      .createBill(contract.id, { billMonth: period.getMonth() + 1, billYear: period.getFullYear() })
-      .subscribe({
-        next: () => {
-          this.notification.success(this.translate.instant('BILLING.CREATE_BILL_SUCCESS'));
-          this.loadBills(contract.id);
-        },
-        error: () => {},
-      });
+    const { year: billYear, month: billMonth } = dateToYearMonth(this.newBillPeriod());
+    this.billingService.createBill(contract.id, { billMonth, billYear }).subscribe({
+      next: () => {
+        this.notification.success(this.translate.instant('BILLING.CREATE_BILL_SUCCESS'));
+        this.loadBills(contract.id);
+      },
+      error: () => {},
+    });
   }
 
   selectBill(bill: MonthlyBillResponse): void {

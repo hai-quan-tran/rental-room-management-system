@@ -14,6 +14,8 @@ import { RoomTypeResponse } from '../../core/models/room-type.model';
 import { LoadingService } from '../../core/services/loading.service';
 import { RoomTypeService } from '../../core/services/room-type.service';
 import { RoomService } from '../../core/services/room.service';
+import { toListQuery } from '../../core/utils/list-query.util';
+import { displayOr } from '../../shared/utils/display.util';
 
 const PAGE_SIZE = 20;
 
@@ -45,6 +47,7 @@ export class RoomTypesPage {
   readonly totalRecords = signal(0);
   readonly loading = this.loadingService.isLoading;
   readonly searchTerm = signal('');
+  readonly displayOr = displayOr;
 
   constructor() {
     this.roomService.branchOptions().subscribe({
@@ -69,21 +72,8 @@ export class RoomTypesPage {
       return;
     }
 
-    const rows = event?.rows ?? PAGE_SIZE;
-    const first = event?.first ?? 0;
-    const page = Math.floor(first / rows);
-
     this.roomTypeService
-      .list(
-        branchId,
-        {
-          page,
-          size: rows,
-          sortField: (event?.sortField as string) || undefined,
-          sortOrder: event?.sortOrder === -1 ? 'desc' : 'asc',
-        },
-        this.searchTerm() || null,
-      )
+      .list(branchId, toListQuery(event, PAGE_SIZE), this.searchTerm() || null)
       .subscribe({
         next: (page) => {
           this.rows.set(page.content);

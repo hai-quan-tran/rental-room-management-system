@@ -1,6 +1,7 @@
 package com.rentalroom.management.service;
 
 import com.rentalroom.management.common.PageResponse;
+import com.rentalroom.management.common.util.MoneyUtils;
 import com.rentalroom.management.dto.request.ExtraFeeItemRequest;
 import com.rentalroom.management.dto.request.MonthlyBillCreateRequest;
 import com.rentalroom.management.dto.request.PaymentRequest;
@@ -18,7 +19,6 @@ import com.rentalroom.management.entity.MonthlyBill;
 import com.rentalroom.management.entity.Payment;
 import com.rentalroom.management.enums.ContractStatus;
 import com.rentalroom.management.enums.PaymentStatus;
-import com.rentalroom.management.enums.Role;
 import com.rentalroom.management.exception.BusinessException;
 import com.rentalroom.management.exception.ErrorCode;
 import com.rentalroom.management.repository.BranchRepository;
@@ -88,10 +88,8 @@ public class BillingService {
      */
     @Transactional(readOnly = true)
     public PageResponse<MonthlyBillListResponse> listAll(Integer billYear, Integer billMonth, Long branchId, Pageable pageable) {
-        var user = SecurityUtils.currentUser();
-        List<Long> branchIds = user.role() == Role.ADMIN_CAP_1
-                ? user.branchIds()
-                : (branchId != null ? List.of(branchId) : branchRepository.findAll().stream().map(Branch::getId).toList());
+        List<Long> branchIds = SecurityUtils.resolveBranchScope(
+                branchId, () -> branchRepository.findAll().stream().map(Branch::getId).toList());
 
         if (branchIds.isEmpty()) {
             return PageResponse.from(Page.empty(pageable));
@@ -110,10 +108,8 @@ public class BillingService {
      * since those readings differ per room. Branch scoping mirrors {@link #listAll}.
      */
     public BulkMonthlyBillCreateResponse bulkCreate(Integer billYear, Integer billMonth, Long branchId) {
-        var user = SecurityUtils.currentUser();
-        List<Long> branchIds = user.role() == Role.ADMIN_CAP_1
-                ? user.branchIds()
-                : (branchId != null ? List.of(branchId) : branchRepository.findAll().stream().map(Branch::getId).toList());
+        List<Long> branchIds = SecurityUtils.resolveBranchScope(
+                branchId, () -> branchRepository.findAll().stream().map(Branch::getId).toList());
 
         if (branchIds.isEmpty()) {
             return new BulkMonthlyBillCreateResponse(List.of(), 0, 0);
@@ -263,13 +259,13 @@ public class BillingService {
         return monthlyBillRepository.findByContractIdOrderByBillYearDescBillMonthDesc(contractId).stream()
                 .map(MonthlyBill::getRemainingAmount)
                 .filter(remaining -> remaining.signum() > 0)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .collect(MoneyUtils.summing());
     }
 
     private void recalculateExtraFeeTotal(MonthlyBill bill) {
         BigDecimal total = extraFeeItemRepository.findByMonthlyBillIdOrderByIdAsc(bill.getId()).stream()
                 .map(ExtraFeeItem::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .collect(MoneyUtils.summing());
         bill.setTotalExtraFee(total);
         monthlyBillRepository.save(bill);
         entityManager.flush();

@@ -1,5 +1,6 @@
 package com.rentalroom.management.service;
 
+import com.rentalroom.management.common.util.DateValidationUtils;
 import com.rentalroom.management.dto.request.ContractCreateRequest;
 import com.rentalroom.management.dto.request.ContractEndDateRequest;
 import com.rentalroom.management.dto.request.ContractTenantRequest;
@@ -74,9 +75,7 @@ public class ContractService {
         if (representativeCount != 1) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Hợp đồng phải có đúng 1 người đại diện ký hợp đồng");
         }
-        if (request.endDate() != null && request.endDate().isBefore(request.startDate())) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Ngày kết thúc phải sau ngày bắt đầu");
-        }
+        DateValidationUtils.assertNotBefore(request.endDate(), request.startDate(), "Ngày kết thúc phải sau ngày bắt đầu");
 
         Contract contract = new Contract();
         contract.setRoom(room);
@@ -119,9 +118,7 @@ public class ContractService {
         if (contract.getStatus() != ContractStatus.ACTIVE) {
             throw BusinessException.conflict("Hợp đồng đã kết thúc, không thể sửa ngày kết thúc");
         }
-        if (request.endDate() != null && request.endDate().isBefore(contract.getStartDate())) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Ngày kết thúc phải sau ngày bắt đầu");
-        }
+        DateValidationUtils.assertNotBefore(request.endDate(), contract.getStartDate(), "Ngày kết thúc phải sau ngày bắt đầu");
         contract.setEndDate(request.endDate());
         contract.setUpdatedBy(SecurityUtils.currentUser().userId());
         return toDetail(contract);
