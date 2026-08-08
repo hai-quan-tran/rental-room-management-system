@@ -945,6 +945,7 @@
           (ngModelChange)="tenantDateOfBirth.set($event)"
           dateFormat="dd/mm/yy"
           [showIcon]="true"
+          appendTo="body"
         />
         @if (tenantSubmitted() && !tenantDateOfBirth()) {
           <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>

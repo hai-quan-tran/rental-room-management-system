@@ -22,7 +22,11 @@ public class DashboardController {
     }
 
     @GetMapping
-    public ApiResponse<DashboardResponse> get(@RequestParam(required = false) Long branchId) {
-        return ApiResponse.success(dashboardService.getDashboard(branchId));
+    public ApiResponse<DashboardResponse> get(@RequestParam(required = false) Long branchId,
+                                               @RequestParam(required = false) Integer fromYear,
+                                               @RequestParam(required = false) Integer fromMonth,
+                                               @RequestParam(required = false) Integer toYear,
+                                               @RequestParam(required = false) Integer toMonth) {
+        return ApiResponse.success(dashboardService.getDashboard(branchId, fromYear, fromMonth, toYear, toMonth));
     }
 }

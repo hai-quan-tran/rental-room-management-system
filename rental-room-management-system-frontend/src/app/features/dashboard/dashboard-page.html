@@ -6,7 +6,7 @@
       <p-select
         [options]="branchOptions()"
         [ngModel]="selectedBranch()"
-        (ngModelChange)="selectedBranch.set($event)"
+        (ngModelChange)="onBranchChange($event)"
         optionLabel="label"
         optionValue="value"
         styleClass="dashboard__branch-select"
@@ -17,7 +17,7 @@
   <div class="dashboard__time-filter">
     <p-datepicker
       [ngModel]="fromMonth()"
-      (ngModelChange)="fromMonth.set($event)"
+      (ngModelChange)="onFromMonthChange($event)"
       view="month"
       dateFormat="mm/yy"
       [showIcon]="true"
@@ -25,7 +25,7 @@
     />
     <p-datepicker
       [ngModel]="toMonth()"
-      (ngModelChange)="toMonth.set($event)"
+      (ngModelChange)="onToMonthChange($event)"
       view="month"
       dateFormat="mm/yy"
       [showIcon]="true"
@@ -35,7 +35,7 @@
 
   <div class="dashboard__grid">
     <p-card [header]="'DASHBOARD.CHART_ROOM_STATUS' | translate">
-      <p-chart type="bar" [data]="roomStatusData" [options]="chartOptions" height="16rem" />
+      <p-chart type="bar" [data]="roomStatusData()" [options]="chartOptions" height="16rem" />
     </p-card>
 
     <p-card [header]="'DASHBOARD.CHART_MOVE_IN_OUT' | translate">
@@ -50,7 +50,7 @@
       [header]="'DASHBOARD.OCCUPANTS_BY_BRANCH' | translate"
       styleClass="dashboard__grid-wide"
     >
-      <p-table [value]="occupantsByBranch" dataKey="branchName">
+      <p-table [value]="occupantsByBranch()" dataKey="branchName">
         <ng-template #header>
           <tr>
             <th>{{ 'BRANCH.NAME' | translate }}</th>
@@ -78,10 +78,10 @@
         }}.
       </p>
       <p-table
-        [value]="missingInvoiceRooms"
+        [value]="missingInvoiceRooms()"
         dataKey="roomCode"
-        [scrollable]="!!missingInvoiceScrollHeight"
-        [scrollHeight]="missingInvoiceScrollHeight"
+        [scrollable]="!!missingInvoiceScrollHeight()"
+        [scrollHeight]="missingInvoiceScrollHeight()"
       >
         <ng-template #header>
           <tr>
@@ -105,14 +105,15 @@
 
     <p-card [header]="'DASHBOARD.UNPAID_INVOICES' | translate" styleClass="dashboard__grid-wide">
       <p-table
-        [value]="unpaidInvoiceRooms"
+        [value]="unpaidInvoiceRooms()"
         dataKey="roomCode"
-        [scrollable]="!!unpaidInvoiceScrollHeight"
-        [scrollHeight]="unpaidInvoiceScrollHeight"
+        [scrollable]="!!unpaidInvoiceScrollHeight()"
+        [scrollHeight]="unpaidInvoiceScrollHeight()"
       >
         <ng-template #header>
           <tr>
             <th>{{ 'MONTHLY_BILLS.ROOM' | translate }}</th>
+            <th>{{ 'BILLING.MONTH_YEAR' | translate }}</th>
             <th>{{ 'BILLING.TOTAL_AMOUNT' | translate }}</th>
             <th>{{ 'BILLING.PAID_AMOUNT' | translate }}</th>
             <th>{{ 'BILLING.REMAINING_AMOUNT' | translate }}</th>
@@ -121,6 +122,7 @@
         <ng-template #body let-row>
           <tr>
             <td>{{ roomBranchLabel(row.roomCode, row.branchName) }}</td>
+            <td>{{ row.billMonth }}/{{ row.billYear }}</td>
             <td>{{ row.totalAmount | number: '1.0-0' }} ₫</td>
             <td>{{ row.paidAmount | number: '1.0-0' }} ₫</td>
             <td>{{ row.remainingAmount | number: '1.0-0' }} ₫</td>
@@ -128,7 +130,7 @@
         </ng-template>
         <ng-template #emptymessage>
           <tr>
-            <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
+            <td colspan="5">{{ 'COMMON.NO_DATA' | translate }}</td>
           </tr>
         </ng-template>
       </p-table>
