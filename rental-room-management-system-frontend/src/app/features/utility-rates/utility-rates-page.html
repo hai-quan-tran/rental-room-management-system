@@ -1,0 +1,66 @@
+<div class="list-page">
+  <h2>{{ 'NAV.UTILITY_RATES' | translate }}</h2>
+
+  <div class="list-page__filters">
+    <p-select
+      [options]="branches()"
+      [ngModel]="selectedBranchId()"
+      (ngModelChange)="selectedBranchId.set($event); onBranchChange()"
+      optionLabel="name"
+      optionValue="id"
+      [placeholder]="'ROOM.SELECT_BRANCH' | translate"
+    />
+  </div>
+
+  <p-table [value]="rows()" [loading]="loading()" dataKey="id">
+    <ng-template #header>
+      <tr>
+        <th>{{ 'BILLING.CATEGORY' | translate }}</th>
+        <th>{{ 'UTILITY_RATE.UNIT_PRICE' | translate }}</th>
+        <th>{{ 'UTILITY_RATE.EFFECTIVE_FROM' | translate }}</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-row>
+      <tr>
+        <td>{{ row.extraFeeCategoryName }}</td>
+        <td>{{ row.unitPrice | number: '1.0-0' }} ₫{{ row.unit ? '/' + row.unit : '' }}</td>
+        <td>{{ row.effectiveFrom }}</td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="3">{{ 'COMMON.NO_DATA' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <h3 class="detail-page__section-title">{{ 'UTILITY_RATE.ADD_TITLE' | translate }}</h3>
+  <div class="room-fee-form">
+    <p-select
+      [options]="meteredCategories()"
+      [ngModel]="newCategoryId()"
+      (ngModelChange)="newCategoryId.set($event)"
+      optionLabel="name"
+      optionValue="id"
+      [placeholder]="'BILLING.CATEGORY' | translate"
+    />
+    <p-inputnumber
+      [ngModel]="newUnitPrice()"
+      (ngModelChange)="newUnitPrice.set($event)"
+      mode="decimal"
+      [min]="0"
+      suffix=" ₫"
+      [placeholder]="'UTILITY_RATE.UNIT_PRICE' | translate"
+    />
+    <p-datepicker
+      [ngModel]="newEffectiveFrom()"
+      (ngModelChange)="newEffectiveFrom.set($event)"
+      dateFormat="dd/mm/yy"
+      [placeholder]="'UTILITY_RATE.EFFECTIVE_FROM' | translate"
+    />
+    <button type="button" pButton icon="pi pi-plus" [label]="'COMMON.ADD_NEW' | translate" (click)="addRate()"></button>
+  </div>
+  @if (submitted() && !canSubmit()) {
+    <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+  }
+</div>

@@ -6,6 +6,8 @@ import com.rentalroom.management.entity.ExtraFeeCategory;
 import com.rentalroom.management.exception.BusinessException;
 import com.rentalroom.management.repository.ExtraFeeCategoryRepository;
 import com.rentalroom.management.repository.ExtraFeeItemRepository;
+import com.rentalroom.management.repository.MeterReadingRepository;
+import com.rentalroom.management.repository.UtilityRateRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,11 +19,17 @@ public class ExtraFeeCategoryService {
 
     private final ExtraFeeCategoryRepository extraFeeCategoryRepository;
     private final ExtraFeeItemRepository extraFeeItemRepository;
+    private final UtilityRateRepository utilityRateRepository;
+    private final MeterReadingRepository meterReadingRepository;
 
     public ExtraFeeCategoryService(ExtraFeeCategoryRepository extraFeeCategoryRepository,
-                                    ExtraFeeItemRepository extraFeeItemRepository) {
+                                    ExtraFeeItemRepository extraFeeItemRepository,
+                                    UtilityRateRepository utilityRateRepository,
+                                    MeterReadingRepository meterReadingRepository) {
         this.extraFeeCategoryRepository = extraFeeCategoryRepository;
         this.extraFeeItemRepository = extraFeeItemRepository;
+        this.utilityRateRepository = utilityRateRepository;
+        this.meterReadingRepository = meterReadingRepository;
     }
 
     @Transactional(readOnly = true)
@@ -53,9 +61,13 @@ public class ExtraFeeCategoryService {
     }
 
     public void delete(Long id) {
-        findEntity(id);
+        ExtraFeeCategory category = findEntity(id);
         if (extraFeeItemRepository.existsByExtraFeeCategoryId(id)) {
             throw BusinessException.conflict("Không thể xóa danh mục đã được sử dụng trong hóa đơn");
+        }
+        if (category.isMetered() && (utilityRateRepository.existsByExtraFeeCategoryId(id)
+                || meterReadingRepository.existsByExtraFeeCategoryId(id))) {
+            throw BusinessException.conflict("Không thể xóa danh mục đang có đơn giá hoặc chỉ số điện/nước đã ghi nhận");
         }
         extraFeeCategoryRepository.deleteById(id);
     }

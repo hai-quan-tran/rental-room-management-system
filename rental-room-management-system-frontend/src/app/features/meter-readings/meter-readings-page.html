@@ -1,0 +1,80 @@
+<div class="list-page">
+  <h2>{{ 'NAV.METER_READINGS' | translate }}</h2>
+
+  <div class="list-page__filters">
+    <p-select
+      [options]="branches()"
+      [ngModel]="selectedBranchId()"
+      (ngModelChange)="selectedBranchId.set($event); onFilterChange()"
+      optionLabel="name"
+      optionValue="id"
+      [placeholder]="'ROOM.SELECT_BRANCH' | translate"
+    />
+    <p-datepicker
+      [ngModel]="billPeriod()"
+      (ngModelChange)="billPeriod.set($event); onFilterChange()"
+      view="month"
+      dateFormat="mm/yy"
+      [placeholder]="'BILLING.MONTH_YEAR' | translate"
+    />
+  </div>
+
+  <p-table [value]="rows()" [loading]="loading()" dataKey="roomId">
+    <ng-template #header>
+      <tr>
+        <th rowspan="2">{{ 'ROOM.CODE' | translate }}</th>
+        @for (col of columns(); track col.id) {
+          <th colspan="5">{{ col.name }}{{ col.unit ? ' (' + col.unit + ')' : '' }}</th>
+        }
+      </tr>
+      <tr>
+        @for (col of columns(); track col.id) {
+          <th>{{ 'METER_READING.OLD_READING' | translate }}</th>
+          <th>{{ 'METER_READING.NEW_READING' | translate }}</th>
+          <th>{{ 'METER_READING.CONSUMPTION' | translate }}</th>
+          <th>{{ 'METER_READING.AMOUNT' | translate }}</th>
+          <th></th>
+        }
+      </tr>
+    </ng-template>
+    <ng-template #body let-row>
+      <tr>
+        <td>{{ row.roomCode }}</td>
+        @for (cell of row.cells; track cell.extraFeeCategoryId) {
+          <td>
+            @if (cell.previousReading !== null) {
+              {{ cell.previousReading }}
+            } @else {
+              <p-inputnumber
+                [ngModel]="cell.oldReadingDraft"
+                (ngModelChange)="cell.oldReadingDraft = $event"
+                [min]="0"
+                [placeholder]="'METER_READING.OLD_READING' | translate"
+              />
+            }
+          </td>
+          <td>
+            <p-inputnumber [ngModel]="cell.newReadingDraft" (ngModelChange)="cell.newReadingDraft = $event" [min]="0" />
+          </td>
+          <td>{{ consumption(cell) }}</td>
+          <td>{{ amount(cell) !== null ? (amount(cell) | number: '1.0-0') + ' ₫' : '—' }}</td>
+          <td>
+            <button
+              type="button"
+              pButton
+              icon="pi pi-save"
+              [text]="true"
+              [disabled]="!canSave(cell)"
+              (click)="saveCell(row, cell)"
+            ></button>
+          </td>
+        }
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td [attr.colspan]="1 + columns().length * 5">{{ 'COMMON.NO_DATA' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

@@ -10,6 +10,8 @@
     "ROOMS": "Rooms",
     "ROOM_TYPES": "Room Types",
     "ITEMS": "Items",
+    "UTILITY_RATES": "Utility Rates",
+    "METER_READINGS": "Meter Readings",
     "DEBT_RECORDS": "Debt Records",
     "MONTHLY_BILLS": "Monthly Bills"
   },
@@ -234,7 +236,7 @@
     "ROOM": "Room",
     "DETAIL_TITLE": "Bill detail",
     "BULK_CREATE_ACTION": "Bulk-create bills",
-    "BULK_CREATE_CONFIRM": "This will create a bill (rent only) for every room with an active contract (matching the currently filtered month/year and branch) that doesn't already have one for this month. Extra fees like electricity and water will still need to be entered per room afterward. Continue?",
+    "BULK_CREATE_CONFIRM": "This will create a bill for every room with an active contract (matching the currently filtered month/year and branch) that doesn't already have one for this month — electricity/water will be computed automatically if a reading and rate are already available, and any other extra fees will still need to be entered per room afterward. Continue?",
     "BULK_RESULT_TITLE": "Newly created bills",
     "BULK_CREATE_CREATED": "Created:",
     "BULK_CREATE_SKIPPED": "Skipped:"
@@ -255,5 +257,21 @@
     "TOTAL_DEDUCTION": "Total deduction",
     "DEPOSIT_REFUND": "Deposit refund",
     "DEBT_CREATED": "Debt created"
+  },
+  "UTILITY_RATE": {
+    "UNIT_PRICE": "Unit price",
+    "EFFECTIVE_FROM": "Effective from",
+    "ADD_TITLE": "Add new rate",
+    "CREATE_SUCCESS": "Rate created successfully"
+  },
+  "METER_READING": {
+    "OLD_READING": "Old reading",
+    "NEW_READING": "New reading",
+    "CONSUMPTION": "Consumption",
+    "AMOUNT": "Amount",
+    "SYNC_UPDATED": "Reading saved and this month's bill updated.",
+    "SYNC_NO_BILL_YET": "Reading saved. The amount will apply automatically once this month's bill is created.",
+    "SYNC_SKIPPED_PAID": "Reading saved, but this month's bill is already fully paid so the amount wasn't updated.",
+    "SYNC_SKIPPED_AMBIGUOUS": "Reading saved, but this room has more than 1 bill for this month so the amount needs a manual update."
   }
 }

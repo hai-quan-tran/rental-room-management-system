@@ -9,6 +9,8 @@ public interface ExtraFeeCategoryRepository extends JpaRepository<ExtraFeeCatego
 
     List<ExtraFeeCategory> findAllByOrderByNameAsc();
 
+    List<ExtraFeeCategory> findByMeteredTrue();
+
     boolean existsByName(String name);
 
     boolean existsByNameAndIdNot(String name, Long id);

@@ -31,6 +31,10 @@ public class ExtraFeeCategory {
     @Column(name = "unit", length = 30)
     private String unit;
 
+    /** Marks categories (Điện, Nước) that get an auto-computed extra-fee-item from {@code utility_rate}/{@code meter_reading}. */
+    @Column(name = "is_metered", nullable = false)
+    private boolean metered = false;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -10,6 +10,8 @@
     "ROOMS": "Phòng trọ",
     "ROOM_TYPES": "Loại phòng",
     "ITEMS": "Vật dụng",
+    "UTILITY_RATES": "Đơn giá điện nước",
+    "METER_READINGS": "Nhập chỉ số điện nước",
     "DEBT_RECORDS": "Công nợ",
     "MONTHLY_BILLS": "Hóa đơn hằng tháng"
   },
@@ -234,7 +236,7 @@
     "ROOM": "Phòng",
     "DETAIL_TITLE": "Chi tiết hóa đơn",
     "BULK_CREATE_ACTION": "Tạo hóa đơn hàng loạt",
-    "BULK_CREATE_CONFIRM": "Hệ thống sẽ tạo hóa đơn (chỉ gồm tiền thuê) cho các phòng đang có hợp đồng hiệu lực (theo tháng/năm và chi nhánh đang lọc) mà chưa có hóa đơn tháng này. Chi phí phát sinh như điện, nước vẫn cần nhập riêng cho từng phòng sau đó. Bạn có chắc chắn muốn tiếp tục?",
+    "BULK_CREATE_CONFIRM": "Hệ thống sẽ tạo hóa đơn cho các phòng đang có hợp đồng hiệu lực (theo tháng/năm và chi nhánh đang lọc) mà chưa có hóa đơn tháng này — tiền điện/nước sẽ tự tính nếu đã có chỉ số + đơn giá, còn lại chi phí phát sinh khác vẫn cần nhập riêng cho từng phòng sau đó. Bạn có chắc chắn muốn tiếp tục?",
     "BULK_RESULT_TITLE": "Hóa đơn vừa tạo",
     "BULK_CREATE_CREATED": "Đã tạo hóa đơn:",
     "BULK_CREATE_SKIPPED": "Đã bỏ qua:"
@@ -255,5 +257,21 @@
     "TOTAL_DEDUCTION": "Tổng tiền trừ",
     "DEPOSIT_REFUND": "Tiền cọc hoàn lại",
     "DEBT_CREATED": "Phát sinh công nợ"
+  },
+  "UTILITY_RATE": {
+    "UNIT_PRICE": "Đơn giá",
+    "EFFECTIVE_FROM": "Ngày hiệu lực",
+    "ADD_TITLE": "Thêm đơn giá mới",
+    "CREATE_SUCCESS": "Tạo đơn giá thành công"
+  },
+  "METER_READING": {
+    "OLD_READING": "Chỉ số cũ",
+    "NEW_READING": "Chỉ số mới",
+    "CONSUMPTION": "Tiêu thụ",
+    "AMOUNT": "Thành tiền",
+    "SYNC_UPDATED": "Đã lưu chỉ số và cập nhật hóa đơn tháng này.",
+    "SYNC_NO_BILL_YET": "Đã lưu chỉ số. Hóa đơn tháng này sẽ tự áp dụng số tiền khi được tạo.",
+    "SYNC_SKIPPED_PAID": "Đã lưu chỉ số, nhưng hóa đơn tháng này đã thanh toán đủ nên không cập nhật số tiền.",
+    "SYNC_SKIPPED_AMBIGUOUS": "Đã lưu chỉ số, nhưng phòng có nhiều hóa đơn trùng tháng nên cần cập nhật tiền thủ công."
   }
 }

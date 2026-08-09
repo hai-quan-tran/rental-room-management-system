@@ -86,6 +86,18 @@ export const routes: Routes = [
         canActivate: [roleGuard(Role.ADMIN_TONG, Role.ADMIN_CAP_1)],
       },
       {
+        path: 'utility-rates',
+        loadComponent: () =>
+          import('./features/utility-rates/utility-rates-page').then((m) => m.UtilityRatesPage),
+        canActivate: [roleGuard(Role.ADMIN_TONG, Role.ADMIN_CAP_1)],
+      },
+      {
+        path: 'meter-readings',
+        loadComponent: () =>
+          import('./features/meter-readings/meter-readings-page').then((m) => m.MeterReadingsPage),
+        canActivate: [roleGuard(Role.ADMIN_TONG, Role.ADMIN_CAP_1)],
+      },
+      {
         path: 'debt-records',
         loadComponent: () => import('./features/debt-records/debt-records-page').then((m) => m.DebtRecordsPage),
       },

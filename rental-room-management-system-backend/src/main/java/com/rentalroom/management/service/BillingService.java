@@ -11,12 +11,16 @@ import com.rentalroom.management.dto.response.MonthlyBillDetailResponse;
 import com.rentalroom.management.dto.response.MonthlyBillListResponse;
 import com.rentalroom.management.dto.response.MonthlyBillResponse;
 import com.rentalroom.management.dto.response.PaymentResponse;
+import com.rentalroom.management.common.util.MoneyUtils;
 import com.rentalroom.management.entity.Branch;
 import com.rentalroom.management.entity.Contract;
 import com.rentalroom.management.entity.ExtraFeeCategory;
 import com.rentalroom.management.entity.ExtraFeeItem;
+import com.rentalroom.management.entity.MeterReading;
 import com.rentalroom.management.entity.MonthlyBill;
 import com.rentalroom.management.entity.Payment;
+import com.rentalroom.management.entity.UtilityRate;
+import com.rentalroom.management.enums.BillSyncStatus;
 import com.rentalroom.management.enums.ContractStatus;
 import com.rentalroom.management.enums.PaymentStatus;
 import com.rentalroom.management.exception.BusinessException;
@@ -25,6 +29,7 @@ import com.rentalroom.management.repository.BranchRepository;
 import com.rentalroom.management.repository.ContractRepository;
 import com.rentalroom.management.repository.ExtraFeeCategoryRepository;
 import com.rentalroom.management.repository.ExtraFeeItemRepository;
+import com.rentalroom.management.repository.MeterReadingRepository;
 import com.rentalroom.management.repository.MonthlyBillRepository;
 import com.rentalroom.management.repository.PaymentRepository;
 import com.rentalroom.management.security.SecurityUtils;
@@ -35,9 +40,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -49,6 +56,8 @@ public class BillingService {
     private final PaymentRepository paymentRepository;
     private final ContractRepository contractRepository;
     private final BranchRepository branchRepository;
+    private final MeterReadingRepository meterReadingRepository;
+    private final UtilityRateService utilityRateService;
     private final EntityManager entityManager;
 
     public BillingService(MonthlyBillRepository monthlyBillRepository,
@@ -57,6 +66,8 @@ public class BillingService {
                            PaymentRepository paymentRepository,
                            ContractRepository contractRepository,
                            BranchRepository branchRepository,
+                           MeterReadingRepository meterReadingRepository,
+                           UtilityRateService utilityRateService,
                            EntityManager entityManager) {
         this.monthlyBillRepository = monthlyBillRepository;
         this.extraFeeItemRepository = extraFeeItemRepository;
@@ -64,6 +75,8 @@ public class BillingService {
         this.paymentRepository = paymentRepository;
         this.contractRepository = contractRepository;
         this.branchRepository = branchRepository;
+        this.meterReadingRepository = meterReadingRepository;
+        this.utilityRateService = utilityRateService;
         this.entityManager = entityManager;
     }
 
@@ -143,6 +156,8 @@ public class BillingService {
             MonthlyBill saved = monthlyBillRepository.save(bill);
             entityManager.flush();
             entityManager.refresh(saved);
+            seedMeteredExtraFeeItems(saved);
+            recalculateExtraFeeTotal(saved);
             created.add(MonthlyBillListResponse.from(saved));
         }
         return new BulkMonthlyBillCreateResponse(created, alreadyExists, notApplicable);
@@ -172,6 +187,8 @@ public class BillingService {
         MonthlyBill saved = monthlyBillRepository.save(bill);
         entityManager.flush();
         entityManager.refresh(saved);
+        seedMeteredExtraFeeItems(saved);
+        recalculateExtraFeeTotal(saved);
         return MonthlyBillResponse.from(saved);
     }
 
@@ -260,6 +277,84 @@ public class BillingService {
                 .map(MonthlyBill::getRemainingAmount)
                 .filter(remaining -> remaining.signum() > 0)
                 .collect(MoneyUtils.summing());
+    }
+
+    /**
+     * Creates 1 {@link ExtraFeeItem} for every metered category (Điện, Nước) on a freshly-created
+     * bill, so the admin never has to remember to add them manually. Amount is computed from
+     * whatever {@link MeterReading}/{@link UtilityRate} already exist for that room+month — 0 with
+     * an explanatory note when either is missing (never throws, so 1 branch missing a rate can't
+     * break bill creation for every room).
+     */
+    private void seedMeteredExtraFeeItems(MonthlyBill bill) {
+        Long branchId = bill.getContract().getRoom().getBranch().getId();
+        Long roomId = bill.getContract().getRoom().getId();
+        LocalDate referenceDate = LocalDate.of(bill.getBillYear(), bill.getBillMonth(), 1);
+
+        for (ExtraFeeCategory category : extraFeeCategoryRepository.findByMeteredTrue()) {
+            BigDecimal amount = BigDecimal.ZERO;
+            String note = "Chưa có chỉ số";
+
+            Optional<MeterReading> reading = meterReadingRepository
+                    .findByRoomIdAndExtraFeeCategoryIdAndBillYearAndBillMonth(
+                            roomId, category.getId(), bill.getBillYear(), bill.getBillMonth());
+            if (reading.isPresent()) {
+                Optional<UtilityRate> rate = utilityRateService.findCurrentRate(branchId, category.getId(), referenceDate);
+                if (rate.isPresent()) {
+                    amount = MoneyUtils.roundToWholeVnd(reading.get().getConsumption().multiply(rate.get().getUnitPrice()));
+                    note = "Tự động: chỉ số " + reading.get().getOldReading() + "→" + reading.get().getNewReading()
+                            + " × " + rate.get().getUnitPrice() + "đ";
+                } else {
+                    note = "Đã có chỉ số nhưng chưa cấu hình đơn giá";
+                }
+            }
+
+            ExtraFeeItem item = new ExtraFeeItem();
+            item.setMonthlyBill(bill);
+            item.setExtraFeeCategory(category);
+            item.setAmount(amount);
+            item.setNote(note);
+            extraFeeItemRepository.save(item);
+        }
+    }
+
+    /**
+     * Called by {@link MeterReadingService} after a meter reading is saved/updated — if exactly 1
+     * bill exists for that room+month, updates that bill's extra-fee item for the given category in
+     * place (creating it if somehow missing, never adding a duplicate) and recalculates the total.
+     * Never throws: skips silently-but-reported (via the returned status) when the bill is already
+     * fully paid, or when >1 bill matches (contract changed mid-month, ambiguous which bill owns the
+     * reading) — the reading itself is always saved by the caller regardless of this result.
+     */
+    BillSyncStatus syncMeteredExtraFeeItem(Long roomId, Integer billYear, Integer billMonth,
+                                            ExtraFeeCategory category, BigDecimal amount, String note) {
+        List<MonthlyBill> bills = monthlyBillRepository.findByContract_Room_IdAndBillYearAndBillMonth(roomId, billYear, billMonth);
+        if (bills.isEmpty()) {
+            return BillSyncStatus.NO_BILL_YET;
+        }
+        if (bills.size() > 1) {
+            return BillSyncStatus.SKIPPED_AMBIGUOUS_CONTRACT;
+        }
+
+        MonthlyBill bill = bills.get(0);
+        if (bill.getPaymentStatus() == PaymentStatus.DA_THANH_TOAN) {
+            return BillSyncStatus.SKIPPED_PAID;
+        }
+
+        ExtraFeeItem item = extraFeeItemRepository.findByMonthlyBillIdOrderByIdAsc(bill.getId()).stream()
+                .filter(existing -> existing.getExtraFeeCategory().getId().equals(category.getId()))
+                .findFirst()
+                .orElseGet(() -> {
+                    ExtraFeeItem created = new ExtraFeeItem();
+                    created.setMonthlyBill(bill);
+                    created.setExtraFeeCategory(category);
+                    return created;
+                });
+        item.setAmount(amount);
+        item.setNote(note);
+        extraFeeItemRepository.save(item);
+        recalculateExtraFeeTotal(bill);
+        return BillSyncStatus.UPDATED;
     }
 
     private void recalculateExtraFeeTotal(MonthlyBill bill) {

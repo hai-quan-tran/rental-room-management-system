@@ -18,4 +18,11 @@ public interface MonthlyBillRepository extends JpaRepository<MonthlyBill, Long> 
 
     Page<MonthlyBill> findByBillYearAndBillMonthAndContract_Room_BranchIdIn(
             Integer billYear, Integer billMonth, List<Long> branchIds, Pageable pageable);
+
+    /**
+     * Every bill for a given room+month, regardless of which contract it belongs to — normally 0
+     * or 1, but can be N>1 if a contract ended and a new one started in the same room within the
+     * same billing month, which callers must treat as ambiguous rather than picking one.
+     */
+    List<MonthlyBill> findByContract_Room_IdAndBillYearAndBillMonth(Long roomId, Integer billYear, Integer billMonth);
 }
