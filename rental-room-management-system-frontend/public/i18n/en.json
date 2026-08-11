@@ -272,6 +272,7 @@
     "SYNC_UPDATED": "Reading saved and this month's bill updated.",
     "SYNC_NO_BILL_YET": "Reading saved. The amount will apply automatically once this month's bill is created.",
     "SYNC_SKIPPED_PAID": "Reading saved, but this month's bill is already fully paid so the amount wasn't updated.",
-    "SYNC_SKIPPED_AMBIGUOUS": "Reading saved, but this room has more than 1 bill for this month so the amount needs a manual update."
+    "SYNC_SKIPPED_AMBIGUOUS": "Reading saved, but this room has more than 1 bill for this month so the amount needs a manual update.",
+    "BILL_FULLY_PAID_LOCKED": "This month's bill is already fully paid, the reading can no longer be changed."
   }
 }

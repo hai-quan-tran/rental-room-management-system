@@ -12,11 +12,13 @@ import com.rentalroom.management.entity.Room;
 import com.rentalroom.management.entity.UtilityRate;
 import com.rentalroom.management.enums.BillSyncStatus;
 import com.rentalroom.management.enums.ContractStatus;
+import com.rentalroom.management.enums.PaymentStatus;
 import com.rentalroom.management.exception.BusinessException;
 import com.rentalroom.management.exception.ErrorCode;
 import com.rentalroom.management.repository.ContractRepository;
 import com.rentalroom.management.repository.ExtraFeeCategoryRepository;
 import com.rentalroom.management.repository.MeterReadingRepository;
+import com.rentalroom.management.repository.MonthlyBillRepository;
 import com.rentalroom.management.repository.RoomRepository;
 import com.rentalroom.management.security.SecurityUtils;
 import jakarta.persistence.EntityManager;
@@ -38,6 +40,7 @@ public class MeterReadingService {
     private final RoomRepository roomRepository;
     private final ExtraFeeCategoryRepository extraFeeCategoryRepository;
     private final ContractRepository contractRepository;
+    private final MonthlyBillRepository monthlyBillRepository;
     private final UtilityRateService utilityRateService;
     private final BillingService billingService;
     private final EntityManager entityManager;
@@ -46,6 +49,7 @@ public class MeterReadingService {
                                 RoomRepository roomRepository,
                                 ExtraFeeCategoryRepository extraFeeCategoryRepository,
                                 ContractRepository contractRepository,
+                                MonthlyBillRepository monthlyBillRepository,
                                 UtilityRateService utilityRateService,
                                 BillingService billingService,
                                 EntityManager entityManager) {
@@ -53,6 +57,7 @@ public class MeterReadingService {
         this.roomRepository = roomRepository;
         this.extraFeeCategoryRepository = extraFeeCategoryRepository;
         this.contractRepository = contractRepository;
+        this.monthlyBillRepository = monthlyBillRepository;
         this.utilityRateService = utilityRateService;
         this.billingService = billingService;
         this.entityManager = entityManager;
@@ -87,6 +92,9 @@ public class MeterReadingService {
         if (!category.isMetered()) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR,
                     "Danh mục \"" + category.getName() + "\" không phải loại chi phí tính theo chỉ số");
+        }
+        if (isBillFullyPaid(roomId, request.billYear(), request.billMonth())) {
+            throw BusinessException.conflict("Hóa đơn tháng này đã thanh toán đủ, không thể sửa chỉ số điện nước");
         }
 
         MeterReading reading = meterReadingRepository
@@ -137,6 +145,7 @@ public class MeterReadingService {
         BigDecimal unitPrice = utilityRateService.findCurrentRate(room.getBranch().getId(), category.getId(), referenceDate)
                 .map(UtilityRate::getUnitPrice)
                 .orElse(null);
+        boolean billFullyPaid = isBillFullyPaid(room.getId(), billYear, billMonth);
 
         Optional<MeterReading> current = meterReadingRepository
                 .findByRoomIdAndExtraFeeCategoryIdAndBillYearAndBillMonth(room.getId(), category.getId(), billYear, billMonth);
@@ -146,14 +155,21 @@ public class MeterReadingService {
                     ? MoneyUtils.roundToWholeVnd(reading.getConsumption().multiply(unitPrice))
                     : null;
             return new MeterReadingCellResponse(category.getId(), category.getName(), category.getUnit(),
-                    reading.getOldReading(), reading.getNewReading(), reading.getConsumption(), unitPrice, amount, reading.getNote());
+                    reading.getOldReading(), reading.getNewReading(), reading.getConsumption(), unitPrice, amount,
+                    reading.getNote(), billFullyPaid);
         }
 
         BigDecimal previousReading = findPreviousReading(room.getId(), category.getId(), billYear, billMonth)
                 .map(MeterReading::getNewReading)
                 .orElse(null);
         return new MeterReadingCellResponse(category.getId(), category.getName(), category.getUnit(),
-                previousReading, null, null, unitPrice, null, null);
+                previousReading, null, null, unitPrice, null, null, billFullyPaid);
+    }
+
+    /** A room+month is locked for reading edits once its (unambiguous) bill is fully paid. */
+    private boolean isBillFullyPaid(Long roomId, Integer billYear, Integer billMonth) {
+        return monthlyBillRepository.findByContract_Room_IdAndBillYearAndBillMonth(roomId, billYear, billMonth)
+                .stream().anyMatch(bill -> bill.getPaymentStatus() == PaymentStatus.DA_THANH_TOAN);
     }
 
     /** Most recent reading strictly before the given period — used both to auto-chain {@code oldReading} and for the grid preview. */

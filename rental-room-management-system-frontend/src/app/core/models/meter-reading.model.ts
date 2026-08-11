@@ -11,6 +11,7 @@ export interface MeterReadingCellResponse {
   unitPrice: number | null;
   amount: number | null;
   note: string | null;
+  billFullyPaid: boolean;
 }
 
 export interface MeterReadingGridRowResponse {

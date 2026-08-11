@@ -25,6 +25,7 @@ interface EditableCell {
   oldReadingDraft: number | null;
   newReadingDraft: number | null;
   unitPrice: number | null;
+  billFullyPaid: boolean;
 }
 
 interface EditableRow {
@@ -117,7 +118,7 @@ export class MeterReadingsPage {
   }
 
   canSave(cell: EditableCell): boolean {
-    if (cell.newReadingDraft === null) {
+    if (cell.billFullyPaid || cell.newReadingDraft === null) {
       return false;
     }
     return cell.previousReading !== null || cell.oldReadingDraft !== null;
@@ -161,6 +162,7 @@ export class MeterReadingsPage {
         oldReadingDraft: null,
         newReadingDraft: cell.currentReading,
         unitPrice: cell.unitPrice,
+        billFullyPaid: cell.billFullyPaid,
       })),
     };
   }

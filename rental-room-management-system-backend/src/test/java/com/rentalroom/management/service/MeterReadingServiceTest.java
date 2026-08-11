@@ -4,14 +4,17 @@ import com.rentalroom.management.dto.request.MeterReadingRequest;
 import com.rentalroom.management.entity.Branch;
 import com.rentalroom.management.entity.ExtraFeeCategory;
 import com.rentalroom.management.entity.MeterReading;
+import com.rentalroom.management.entity.MonthlyBill;
 import com.rentalroom.management.entity.Room;
 import com.rentalroom.management.entity.UtilityRate;
 import com.rentalroom.management.enums.BillSyncStatus;
+import com.rentalroom.management.enums.PaymentStatus;
 import com.rentalroom.management.enums.Role;
 import com.rentalroom.management.exception.BusinessException;
 import com.rentalroom.management.repository.ContractRepository;
 import com.rentalroom.management.repository.ExtraFeeCategoryRepository;
 import com.rentalroom.management.repository.MeterReadingRepository;
+import com.rentalroom.management.repository.MonthlyBillRepository;
 import com.rentalroom.management.repository.RoomRepository;
 import com.rentalroom.management.security.SecurityUtils;
 import com.rentalroom.management.security.UserPrincipal;
@@ -51,6 +54,7 @@ class MeterReadingServiceTest {
     private RoomRepository roomRepository;
     private ExtraFeeCategoryRepository extraFeeCategoryRepository;
     private ContractRepository contractRepository;
+    private MonthlyBillRepository monthlyBillRepository;
     private UtilityRateService utilityRateService;
     private BillingService billingService;
     private EntityManager entityManager;
@@ -67,12 +71,13 @@ class MeterReadingServiceTest {
         roomRepository = mock(RoomRepository.class);
         extraFeeCategoryRepository = mock(ExtraFeeCategoryRepository.class);
         contractRepository = mock(ContractRepository.class);
+        monthlyBillRepository = mock(MonthlyBillRepository.class);
         utilityRateService = mock(UtilityRateService.class);
         billingService = mock(BillingService.class);
         entityManager = mock(EntityManager.class);
 
         meterReadingService = new MeterReadingService(meterReadingRepository, roomRepository, extraFeeCategoryRepository,
-                contractRepository, utilityRateService, billingService, entityManager);
+                contractRepository, monthlyBillRepository, utilityRateService, billingService, entityManager);
 
         Branch branch = new Branch();
         branch.setId(1L);
@@ -186,5 +191,18 @@ class MeterReadingServiceTest {
 
         assertEquals(BigDecimal.ZERO, response.amount());
         verify(billingService).syncMeteredExtraFeeItem(eq(50L), eq(2026), eq(3), eq(electricity), eq(BigDecimal.ZERO), any());
+    }
+
+    @Test
+    void billAlreadyFullyPaid_rejectsReadingChange() {
+        MonthlyBill paidBill = new MonthlyBill();
+        paidBill.setPaymentStatus(PaymentStatus.DA_THANH_TOAN);
+        when(monthlyBillRepository.findByContract_Room_IdAndBillYearAndBillMonth(50L, 2026, 3))
+                .thenReturn(List.of(paidBill));
+
+        MeterReadingRequest request = new MeterReadingRequest(10L, 3, 2026, new BigDecimal("100"), new BigDecimal("125"), null);
+        assertThrows(BusinessException.class, () -> meterReadingService.upsertReading(50L, request));
+
+        verify(meterReadingRepository, Mockito.never()).save(any());
     }
 }

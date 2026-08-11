@@ -272,6 +272,7 @@
     "SYNC_UPDATED": "Đã lưu chỉ số và cập nhật hóa đơn tháng này.",
     "SYNC_NO_BILL_YET": "Đã lưu chỉ số. Hóa đơn tháng này sẽ tự áp dụng số tiền khi được tạo.",
     "SYNC_SKIPPED_PAID": "Đã lưu chỉ số, nhưng hóa đơn tháng này đã thanh toán đủ nên không cập nhật số tiền.",
-    "SYNC_SKIPPED_AMBIGUOUS": "Đã lưu chỉ số, nhưng phòng có nhiều hóa đơn trùng tháng nên cần cập nhật tiền thủ công."
+    "SYNC_SKIPPED_AMBIGUOUS": "Đã lưu chỉ số, nhưng phòng có nhiều hóa đơn trùng tháng nên cần cập nhật tiền thủ công.",
+    "BILL_FULLY_PAID_LOCKED": "Hóa đơn tháng này đã thanh toán đủ, không thể sửa chỉ số."
   }
 }

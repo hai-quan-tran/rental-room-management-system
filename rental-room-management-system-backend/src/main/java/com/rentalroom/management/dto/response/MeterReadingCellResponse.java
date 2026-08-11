@@ -12,6 +12,7 @@ public record MeterReadingCellResponse(
         BigDecimal consumption,
         BigDecimal unitPrice,
         BigDecimal amount,
-        String note
+        String note,
+        boolean billFullyPaid
 ) {
 }
