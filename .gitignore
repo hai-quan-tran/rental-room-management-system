@@ -26,3 +26,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Dev-seed generated data (random per run, not meant to be committed)
+rental-room-management-system-db/dev-seed/seed_*.sql

@@ -27,3 +27,18 @@ Yêu cầu: đã chạy xong V1-V3 migration và có sẵn tài khoản `admin` 
 
 Chạy lại từ đầu (DB dev mới toanh) chỉ cần 1 → 2, bỏ qua 3-4 nếu không cần cảnh huống ở ghép.
 Mỗi lần `node 02_...js` chạy sẽ ra dữ liệu ngẫu nhiên khác (tên, tuổi, ngày hợp đồng...).
+
+5. **Hóa đơn hằng tháng (điện/nước tính theo chỉ số + thanh toán)** — yêu cầu đã chạy xong migration
+   V4 (`utility_rate`/`meter_reading`). Xóa sạch hóa đơn cũ rồi sinh lại đầy đủ cho từng phòng, từng
+   tháng từ lúc nhận phòng đến hết tháng 7/2026, có điện/nước tính theo chỉ số công tơ ngẫu nhiên hợp
+   lý theo số người ở; toàn bộ đã thanh toán đủ trừ mỗi chi nhánh chừa 3 phòng chưa thanh toán hóa đơn
+   tháng 7 (2/3 phòng đó cũng chỉ thanh toán 1 phần hóa đơn tháng 6):
+   ```
+   mysql -h localhost -u root -p --default-character-set=utf8mb4 rental_room_management < 05a_clear_bills.sql
+   mysql -h localhost -u root -p --default-character-set=utf8mb4 rental_room_management < 05b_utility_rates_baseline.sql
+   node 05_generate_monthly_bills.js   # đọc trực tiếp hợp đồng ACTIVE hiện có trong DB, ra seed_05_monthly_bills.sql
+   mysql -h localhost -u root -p --default-character-set=utf8mb4 rental_room_management < seed_05_monthly_bills.sql
+   ```
+   Chạy lại được: lặp lại đúng 4 lệnh trên (mỗi lần `node 05_...js` chạy random khác, giống các script
+   khác trong thư mục này). `05b_utility_rates_baseline.sql` chỉ cần chạy 1 lần trừ khi đã xóa
+   `utility_rate` — chạy lại sẽ lỗi trùng khóa nếu 4 dòng đó vẫn còn.
