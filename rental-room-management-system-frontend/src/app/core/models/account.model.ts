@@ -2,7 +2,8 @@ import { Role } from '../enums/role.enum';
 
 export interface AccountResponse {
   id: number;
-  fullName: string;
+  /** Not collected on the Account screen anymore — set only via the linked Employee record, if any. */
+  fullName: string | null;
   username: string;
   role: Role;
   active: boolean;
@@ -11,14 +12,12 @@ export interface AccountResponse {
 }
 
 export interface AccountCreateRequest {
-  fullName: string;
   username: string;
   password: string;
   role: Role;
 }
 
 export interface AccountUpdateRequest {
-  fullName: string;
   username: string;
   role: Role;
 }

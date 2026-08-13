@@ -15,6 +15,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { labelKey: 'NAV.DASHBOARD', icon: 'pi pi-chart-bar', path: '/dashboard', roles: [Role.ADMIN_TONG, Role.ADMIN_CAP_1] },
   { labelKey: 'NAV.ACCOUNTS', icon: 'pi pi-users', path: '/accounts', roles: [Role.ADMIN_TONG] },
+  { labelKey: 'NAV.EMPLOYEES', icon: 'pi pi-briefcase', path: '/employees', roles: [Role.ADMIN_TONG] },
   { labelKey: 'NAV.TENANTS', icon: 'pi pi-id-card', path: '/tenants', roles: [Role.ADMIN_TONG, Role.ADMIN_CAP_1] },
   { labelKey: 'NAV.BRANCHES', icon: 'pi pi-building', path: '/branches', roles: [Role.ADMIN_TONG] },
   { labelKey: 'NAV.ROOMS', icon: 'pi pi-home', path: '/rooms', roles: [Role.ADMIN_TONG, Role.ADMIN_CAP_1] },

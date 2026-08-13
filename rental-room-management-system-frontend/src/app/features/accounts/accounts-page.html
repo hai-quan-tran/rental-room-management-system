@@ -62,7 +62,6 @@
   >
     <ng-template #header>
       <tr>
-        <th pSortableColumn="fullName">{{ 'ACCOUNT.FULL_NAME' | translate }} <p-sortIcon field="fullName" /></th>
         <th pSortableColumn="username">{{ 'ACCOUNT.USERNAME' | translate }} <p-sortIcon field="username" /></th>
         <th>{{ 'ACCOUNT.ROLE' | translate }}</th>
         <th>{{ 'COMMON.STATUS' | translate }}</th>
@@ -72,7 +71,6 @@
 
     <ng-template #body let-account>
       <tr class="clickable-row" (click)="goToDetail(account.id)">
-        <td>{{ account.fullName }}</td>
         <td>{{ account.username }}</td>
         <td>{{ 'ROLE.' + account.role | translate }}</td>
         <td>
@@ -87,7 +85,7 @@
 
     <ng-template #emptymessage>
       <tr>
-        <td colspan="5">{{ 'COMMON.NO_DATA' | translate }}</td>
+        <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
       </tr>
     </ng-template>
   </p-table>

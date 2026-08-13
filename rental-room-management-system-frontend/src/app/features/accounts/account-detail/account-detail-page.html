@@ -27,20 +27,6 @@
 
   <div class="detail-page__form">
     <div class="field">
-      <label for="fullName">{{ 'ACCOUNT.FULL_NAME' | translate }}</label>
-      <input
-        id="fullName"
-        type="text"
-        pInputText
-        [ngModel]="fullName()"
-        (ngModelChange)="fullName.set($event)"
-      />
-      @if (submitted() && !fullName()) {
-        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
-      }
-    </div>
-
-    <div class="field">
       <label for="username">{{ 'ACCOUNT.USERNAME' | translate }}</label>
       <input
         id="username"

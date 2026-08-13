@@ -1,13 +1,13 @@
 package com.rentalroom.management.entity;
 
-import com.rentalroom.management.enums.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,35 +15,46 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/** Employee holds the owning side of the 1-1 relation to Account — an employee cannot exist without a login. */
 @Entity
-@Table(name = "account")
+@Table(name = "employee")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Account {
+public class Employee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** No longer collected on the Account screen — synced from the linked Employee (see EmployeeService). Null when unlinked. */
-    @Column(name = "full_name", length = 150)
+    @Column(name = "full_name", length = 150, nullable = false)
     private String fullName;
 
-    @Column(name = "username", length = 100, nullable = false, unique = true)
-    private String username;
+    @Column(name = "date_of_birth", nullable = false)
+    private LocalDate dateOfBirth;
 
-    @Column(name = "password_hash", length = 255, nullable = false)
-    private String passwordHash;
+    @Column(name = "id_card_number", length = 20, nullable = false, unique = true)
+    private String idCardNumber;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", length = 30, nullable = false)
-    private Role role;
+    @Column(name = "phone_number", length = 20, nullable = false)
+    private String phoneNumber;
 
-    @Column(name = "is_active", nullable = false)
-    private boolean active = true;
+    @Column(name = "email", length = 150, nullable = false)
+    private String email;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false, unique = true)
+    private Account account;
+
+    /** Audit metadata only — the acting account id, not a managed association. */
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -58,7 +69,7 @@ public class Account {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof Account other)) {
+        if (!(o instanceof Employee other)) {
             return false;
         }
         return id != null && id.equals(other.id);

@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /** Account management screen — ADMIN_TONG only (spec 4.1). */
 @RestController
 @RequestMapping("/api/accounts")
@@ -47,6 +49,12 @@ public class AccountController {
     @GetMapping("/{id}")
     public ApiResponse<AccountResponse> get(@PathVariable Long id) {
         return ApiResponse.success(accountService.get(id));
+    }
+
+    /** Candidates for the "link existing account" flow on the Employee screen. */
+    @GetMapping("/unassigned")
+    public ApiResponse<List<AccountResponse>> listUnassigned() {
+        return ApiResponse.success(accountService.listUnassigned());
     }
 
     @PostMapping

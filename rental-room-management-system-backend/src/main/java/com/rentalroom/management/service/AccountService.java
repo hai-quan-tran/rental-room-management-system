@@ -76,10 +76,15 @@ public class AccountService {
                 && accountRepository.existsByUsername(request.username())) {
             throw BusinessException.conflict("Tên đăng nhập đã tồn tại");
         }
-        account.setFullName(request.fullName());
         account.setUsername(request.username());
         account.setRole(request.role());
         return AccountResponse.from(accountRepository.save(account));
+    }
+
+    /** Accounts not yet linked to any Employee — candidates for the "link existing account" flow on the Employee screen. */
+    @Transactional(readOnly = true)
+    public List<AccountResponse> listUnassigned() {
+        return accountRepository.findUnassigned().stream().map(AccountResponse::from).toList();
     }
 
     public void changePassword(Long id, String newPassword) {

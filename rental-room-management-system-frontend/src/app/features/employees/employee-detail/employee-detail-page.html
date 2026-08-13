@@ -1,0 +1,262 @@
+<div class="detail-page">
+  <div class="detail-page__header">
+    <h2>{{ (isNew() ? 'EMPLOYEE.CREATE_TITLE' : 'EMPLOYEE.EDIT_TITLE') | translate }}</h2>
+
+    @if (!isNew()) {
+      <div class="detail-page__header-actions">
+        <button
+          type="button"
+          pButton
+          severity="danger"
+          [text]="true"
+          icon="pi pi-trash"
+          [label]="'COMMON.DELETE' | translate"
+          (click)="remove()"
+        ></button>
+      </div>
+    }
+  </div>
+
+  <div class="detail-page__form">
+    <div class="field">
+      <label for="fullName">{{ 'EMPLOYEE.FULL_NAME' | translate }}</label>
+      <input
+        id="fullName"
+        type="text"
+        pInputText
+        [ngModel]="fullName()"
+        (ngModelChange)="fullName.set($event)"
+      />
+      @if (submitted() && !fullName()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="dateOfBirth">{{ 'EMPLOYEE.DATE_OF_BIRTH' | translate }}</label>
+      <p-datepicker
+        inputId="dateOfBirth"
+        [ngModel]="dateOfBirth()"
+        (ngModelChange)="dateOfBirth.set($event)"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+      />
+      @if (submitted() && !dateOfBirth()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="idCardNumber">{{ 'EMPLOYEE.ID_CARD' | translate }}</label>
+      <input
+        id="idCardNumber"
+        type="text"
+        pInputText
+        [ngModel]="idCardNumber()"
+        (ngModelChange)="idCardNumber.set($event)"
+      />
+      @if (submitted() && !idCardNumber()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="phoneNumber">{{ 'EMPLOYEE.PHONE' | translate }}</label>
+      <input
+        id="phoneNumber"
+        type="text"
+        pInputText
+        [ngModel]="phoneNumber()"
+        (ngModelChange)="phoneNumber.set($event)"
+      />
+      @if (submitted() && !phoneNumber()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="email">{{ 'EMPLOYEE.EMAIL' | translate }}</label>
+      <input
+        id="email"
+        type="email"
+        pInputText
+        [ngModel]="email()"
+        (ngModelChange)="email.set($event)"
+      />
+      @if (submitted() && !email()) {
+        <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+      }
+    </div>
+  </div>
+
+  <div class="detail-page__section">
+    <div class="detail-page__header">
+      <h3 class="detail-page__section-title">{{ 'EMPLOYEE.ACCOUNT_SECTION' | translate }}</h3>
+
+      @if (!isNew() && employee(); as employee) {
+        <div class="detail-page__header-actions">
+          <button
+            type="button"
+            pButton
+            [text]="true"
+            [label]="'ACCOUNT.CHANGE_PASSWORD' | translate"
+            icon="pi pi-key"
+            (click)="openPasswordDialog()"
+          ></button>
+          <button
+            type="button"
+            pButton
+            [severity]="employee.active ? 'danger' : 'success'"
+            [text]="true"
+            [label]="(employee.active ? 'ACCOUNT.DEACTIVATE' : 'ACCOUNT.ACTIVATE') | translate"
+            [icon]="employee.active ? 'pi pi-ban' : 'pi pi-check'"
+            (click)="toggleActive()"
+          ></button>
+        </div>
+      }
+    </div>
+
+    <div class="detail-page__form">
+      @if (isNew()) {
+        <div class="field">
+          <label for="accountMode">{{ 'EMPLOYEE.ACCOUNT_MODE' | translate }}</label>
+          <p-select
+            inputId="accountMode"
+            [options]="accountModeOptions()"
+            [ngModel]="accountMode()"
+            (ngModelChange)="accountMode.set($event)"
+            optionLabel="label"
+            optionValue="value"
+          />
+        </div>
+
+        @if (accountMode() === 'existing') {
+          <div class="field">
+            <label for="existingAccountId">{{ 'EMPLOYEE.EXISTING_ACCOUNT' | translate }}</label>
+            <p-select
+              inputId="existingAccountId"
+              [options]="unassignedAccountOptions()"
+              [ngModel]="existingAccountId()"
+              (ngModelChange)="existingAccountId.set($event)"
+              optionLabel="label"
+              optionValue="value"
+              [placeholder]="'EMPLOYEE.EXISTING_ACCOUNT' | translate"
+            />
+            @if (submitted() && !existingAccountId()) {
+              <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+            }
+            @if (unassignedAccountOptions().length === 0) {
+              <small>{{ 'EMPLOYEE.NO_UNASSIGNED_ACCOUNTS' | translate }}</small>
+            }
+          </div>
+        } @else {
+          <div class="field">
+            <label for="username">{{ 'ACCOUNT.USERNAME' | translate }}</label>
+            <input
+              id="username"
+              type="text"
+              pInputText
+              [ngModel]="username()"
+              (ngModelChange)="username.set($event)"
+              autocomplete="username"
+            />
+            @if (submitted() && !username()) {
+              <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="password">{{ 'AUTH.PASSWORD' | translate }}</label>
+            <p-password
+              inputId="password"
+              [ngModel]="password()"
+              (ngModelChange)="password.set($event)"
+              [feedback]="false"
+              [toggleMask]="true"
+              autocomplete="new-password"
+            />
+            @if (submitted() && password().length < 6) {
+              <small class="field-error">{{ 'VALIDATION.MIN_LENGTH_6' | translate }}</small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="role">{{ 'ACCOUNT.ROLE' | translate }}</label>
+            <p-select
+              inputId="role"
+              [options]="roleOptions()"
+              [ngModel]="role()"
+              (ngModelChange)="role.set($event)"
+              optionLabel="label"
+              optionValue="value"
+            />
+          </div>
+        }
+      } @else if (employee(); as employee) {
+        <div class="field">
+          <label>{{ 'ACCOUNT.USERNAME' | translate }}</label>
+          <input type="text" pInputText [ngModel]="employee.username" [disabled]="true" />
+        </div>
+
+        <div class="field">
+          <label>{{ 'ACCOUNT.ROLE' | translate }}</label>
+          <input type="text" pInputText [ngModel]="('ROLE.' + employee.role | translate)" [disabled]="true" />
+        </div>
+
+        <div class="field">
+          <label>{{ 'COMMON.STATUS' | translate }}</label>
+          <p-tag
+            [value]="(employee.active ? 'COMMON.ACTIVE' : 'COMMON.INACTIVE') | translate"
+            [severity]="employee.active ? 'success' : 'danger'"
+          />
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="detail-page__actions">
+    <button
+      type="button"
+      pButton
+      severity="danger"
+      [text]="true"
+      [label]="'COMMON.CANCEL' | translate"
+      [routerLink]="['/employees']"
+    ></button>
+    <button
+      type="button"
+      pButton
+      [label]="'COMMON.SAVE' | translate"
+      [loading]="loading()"
+      (click)="save()"
+    ></button>
+  </div>
+
+  <p-dialog
+    [header]="'ACCOUNT.CHANGE_PASSWORD' | translate"
+    [modal]="true"
+    [visible]="passwordDialogVisible()"
+    (visibleChange)="passwordDialogVisible.set($event)"
+    [style]="{ width: '24rem' }"
+  >
+    <div class="field">
+      <label for="newPassword">{{ 'ACCOUNT.NEW_PASSWORD' | translate }}</label>
+      <p-password
+        inputId="newPassword"
+        [ngModel]="newPassword()"
+        (ngModelChange)="newPassword.set($event)"
+        [feedback]="false"
+        [toggleMask]="true"
+        autocomplete="new-password"
+      />
+      @if (passwordSubmitted() && newPassword().length < 6) {
+        <small class="field-error">{{ 'VALIDATION.MIN_LENGTH_6' | translate }}</small>
+      }
+    </div>
+
+    <ng-template #footer>
+      <button type="button" pButton severity="danger" [text]="true" [label]="'COMMON.CANCEL' | translate" (click)="passwordDialogVisible.set(false)"></button>
+      <button type="button" pButton [label]="'COMMON.SAVE' | translate" [loading]="loading()" (click)="confirmChangePassword()"></button>
+    </ng-template>
+  </p-dialog>
+</div>

@@ -31,6 +31,17 @@ export const routes: Routes = [
         canActivate: [roleGuard(Role.ADMIN_TONG)],
       },
       {
+        path: 'employees',
+        loadComponent: () => import('./features/employees/employees-page').then((m) => m.EmployeesPage),
+        canActivate: [roleGuard(Role.ADMIN_TONG)],
+      },
+      {
+        path: 'employees/:id',
+        loadComponent: () =>
+          import('./features/employees/employee-detail/employee-detail-page').then((m) => m.EmployeeDetailPage),
+        canActivate: [roleGuard(Role.ADMIN_TONG)],
+      },
+      {
         path: 'tenants',
         loadComponent: () => import('./features/tenants/tenants-page').then((m) => m.TenantsPage),
       },

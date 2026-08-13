@@ -5,6 +5,7 @@
   "NAV": {
     "DASHBOARD": "Dashboard",
     "ACCOUNTS": "Accounts",
+    "EMPLOYEES": "Employees",
     "TENANTS": "Tenants",
     "BRANCHES": "Branches",
     "ROOMS": "Rooms",
@@ -102,6 +103,26 @@
     "RENTAL_PERIOD": "Rental period",
     "REPRESENTATIVE": "Representative",
     "REPRESENTATIVE_TAG": "Contract signer"
+  },
+  "EMPLOYEE": {
+    "FULL_NAME": "Full name",
+    "ID_CARD": "ID card",
+    "PHONE": "Phone",
+    "EMAIL": "Email",
+    "DATE_OF_BIRTH": "Date of birth",
+    "SEARCH_PLACEHOLDER": "Search by name or ID card",
+    "CREATE_TITLE": "Add employee",
+    "EDIT_TITLE": "Employee detail",
+    "CREATE_SUCCESS": "Employee created successfully",
+    "UPDATE_SUCCESS": "Employee updated successfully",
+    "DELETE_CONFIRM": "Are you sure you want to delete this employee? The linked account will be deactivated.",
+    "DELETE_SUCCESS": "Employee deleted successfully",
+    "ACCOUNT_SECTION": "Login account",
+    "ACCOUNT_MODE": "Account type",
+    "ACCOUNT_MODE_NEW": "Create a new account",
+    "ACCOUNT_MODE_EXISTING": "Link an existing account",
+    "EXISTING_ACCOUNT": "Account",
+    "NO_UNASSIGNED_ACCOUNTS": "No accounts available that aren't already linked to another employee"
   },
   "CONTRACT": {
     "STATUS_ACTIVE": "Active",

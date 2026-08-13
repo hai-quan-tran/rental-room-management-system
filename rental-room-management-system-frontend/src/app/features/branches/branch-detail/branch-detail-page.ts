@@ -50,7 +50,9 @@ export class BranchDetailPage implements OnInit {
   ngOnInit(): void {
     this.accountService.listManagerOptions().subscribe({
       next: (accounts) =>
-        this.managerOptions.set(accounts.map((a) => ({ label: `${a.fullName} (${a.username})`, value: a.id }))),
+        this.managerOptions.set(
+          accounts.map((a) => ({ label: a.fullName ? `${a.fullName} (${a.username})` : a.username, value: a.id })),
+        ),
       error: () => {},
     });
 

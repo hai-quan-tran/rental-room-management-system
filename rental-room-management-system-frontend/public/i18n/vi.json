@@ -5,6 +5,7 @@
   "NAV": {
     "DASHBOARD": "Tổng quan",
     "ACCOUNTS": "Tài khoản",
+    "EMPLOYEES": "Nhân viên",
     "TENANTS": "Người thuê",
     "BRANCHES": "Chi nhánh",
     "ROOMS": "Phòng trọ",
@@ -102,6 +103,26 @@
     "RENTAL_PERIOD": "Thời gian thuê",
     "REPRESENTATIVE": "Đại diện",
     "REPRESENTATIVE_TAG": "Người ký hợp đồng"
+  },
+  "EMPLOYEE": {
+    "FULL_NAME": "Họ tên",
+    "ID_CARD": "CCCD",
+    "PHONE": "Số điện thoại",
+    "EMAIL": "Email",
+    "DATE_OF_BIRTH": "Ngày sinh",
+    "SEARCH_PLACEHOLDER": "Tìm theo tên hoặc CCCD",
+    "CREATE_TITLE": "Thêm nhân viên",
+    "EDIT_TITLE": "Chi tiết nhân viên",
+    "CREATE_SUCCESS": "Tạo nhân viên thành công",
+    "UPDATE_SUCCESS": "Cập nhật nhân viên thành công",
+    "DELETE_CONFIRM": "Bạn có chắc chắn muốn xóa nhân viên này? Tài khoản đăng nhập liên kết sẽ bị ngừng hoạt động.",
+    "DELETE_SUCCESS": "Xóa nhân viên thành công",
+    "ACCOUNT_SECTION": "Tài khoản đăng nhập",
+    "ACCOUNT_MODE": "Loại tài khoản",
+    "ACCOUNT_MODE_NEW": "Tạo tài khoản mới",
+    "ACCOUNT_MODE_EXISTING": "Chọn tài khoản có sẵn",
+    "EXISTING_ACCOUNT": "Tài khoản",
+    "NO_UNASSIGNED_ACCOUNTS": "Không có tài khoản nào chưa gắn với nhân viên khác"
   },
   "CONTRACT": {
     "STATUS_ACTIVE": "Đang hiệu lực",

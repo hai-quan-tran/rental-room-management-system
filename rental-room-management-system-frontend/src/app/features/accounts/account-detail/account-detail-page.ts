@@ -48,7 +48,6 @@ export class AccountDetailPage implements OnInit {
   readonly isNew = computed(() => this.accountId === null);
   readonly account = signal<AccountResponse | null>(null);
 
-  readonly fullName = signal('');
   readonly username = signal('');
   readonly password = signal('');
   readonly role = signal<Role>(Role.ADMIN_CAP_1);
@@ -74,7 +73,6 @@ export class AccountDetailPage implements OnInit {
     this.accountService.get(this.accountId).subscribe({
       next: (account) => {
         this.account.set(account);
-        this.fullName.set(account.fullName);
         this.username.set(account.username);
         this.role.set(account.role);
       },
@@ -84,14 +82,13 @@ export class AccountDetailPage implements OnInit {
 
   save(): void {
     this.submitted.set(true);
-    if (!this.fullName() || !this.username() || (this.isNew() && this.password().length < 6)) {
+    if (!this.username() || (this.isNew() && this.password().length < 6)) {
       return;
     }
 
     if (this.isNew()) {
       this.accountService
         .create({
-          fullName: this.fullName(),
           username: this.username(),
           password: this.password(),
           role: this.role(),
@@ -107,7 +104,7 @@ export class AccountDetailPage implements OnInit {
     }
 
     this.accountService
-      .update(this.accountId!, { fullName: this.fullName(), username: this.username(), role: this.role() })
+      .update(this.accountId!, { username: this.username(), role: this.role() })
       .subscribe({
         next: () => {
           this.notification.success(this.translate.instant('ACCOUNT.UPDATE_SUCCESS'));

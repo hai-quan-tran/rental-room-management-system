@@ -27,6 +27,11 @@ export class AccountService {
     return this.api.get<AccountResponse>(`${environment.apiUrl}/accounts/${id}`);
   }
 
+  /** Accounts not yet linked to any Employee — for the "link existing account" flow on the Employee screen. */
+  listUnassigned(): Observable<AccountResponse[]> {
+    return this.api.get<AccountResponse[]>(`${environment.apiUrl}/accounts/unassigned`);
+  }
+
   create(request: AccountCreateRequest): Observable<AccountResponse> {
     return this.api.post<AccountResponse>(`${environment.apiUrl}/accounts`, request);
   }
