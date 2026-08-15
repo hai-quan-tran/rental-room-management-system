@@ -11,8 +11,10 @@ import { SelectModule } from 'primeng/select';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 
+import { PaymentStatus } from '../../core/enums/payment-status.enum';
 import { Role } from '../../core/enums/role.enum';
 import {
+  BulkBillConfirmResult,
   BulkMonthlyBillCreateResult,
   ExtraFeeItemResponse,
   MonthlyBillDetailResponse,
@@ -30,7 +32,11 @@ import { RoomService } from '../../core/services/room.service';
 import { dateToYearMonth, toIsoDate } from '../../core/utils/date.util';
 import { toListQuery } from '../../core/utils/list-query.util';
 import { displayOr, roomBranchLabel } from '../../shared/utils/display.util';
-import { paymentStatusSeverity } from '../../shared/utils/status-severity.util';
+import {
+  canEditBillItems,
+  canRecordPayment,
+  paymentStatusSeverity,
+} from '../../shared/utils/status-severity.util';
 
 const PAGE_SIZE = 20;
 
@@ -65,6 +71,8 @@ export class MonthlyBillsPage implements OnInit {
   readonly loading = this.loadingService.isLoading;
   readonly isAdminTong = this.authService.hasRole(Role.ADMIN_TONG);
   readonly paymentStatusSeverity = paymentStatusSeverity;
+  readonly canEditBillItems = canEditBillItems;
+  readonly canRecordPayment = canRecordPayment;
   readonly roomBranchLabel = roomBranchLabel;
   readonly displayOr = displayOr;
 
@@ -79,10 +87,13 @@ export class MonthlyBillsPage implements OnInit {
   readonly bulkResultDialogVisible = signal(false);
   readonly bulkResult = signal<BulkMonthlyBillCreateResult | null>(null);
 
+  readonly selectedBills = signal<MonthlyBillListItem[]>([]);
+  readonly confirmBulkResultDialogVisible = signal(false);
+  readonly confirmBulkResult = signal<BulkBillConfirmResult | null>(null);
+
   readonly detailDialogVisible = signal(false);
   readonly detailBill = signal<MonthlyBillListItem | null>(null);
   readonly detailData = signal<MonthlyBillDetailResponse | null>(null);
-  readonly detailEditable = signal(false);
 
   readonly newFeeCategoryId = signal<number | null>(null);
   readonly newFeeAmount = signal<number | null>(null);
@@ -129,7 +140,35 @@ export class MonthlyBillsPage implements OnInit {
   }
 
   onFilterChange(): void {
+    this.selectedBills.set([]);
     this.load({ first: 0, rows: PAGE_SIZE });
+  }
+
+  isUnconfirmed(bill: MonthlyBillListItem): boolean {
+    return bill.paymentStatus === PaymentStatus.CHUA_XAC_NHAN;
+  }
+
+  confirmSelectedBulk(): void {
+    const ids = this.selectedBills()
+      .filter((bill) => this.isUnconfirmed(bill))
+      .map((bill) => bill.id);
+    if (ids.length === 0) {
+      return;
+    }
+    this.confirmService.confirm(
+      `${this.translate.instant('MONTHLY_BILLS.CONFIRM_BULK_CONFIRM_PREFIX')} ${ids.length} ${this.translate.instant('MONTHLY_BILLS.CONFIRM_BULK_CONFIRM_SUFFIX')}`,
+      () => {
+        this.billingService.confirmBulk(ids).subscribe({
+          next: (result) => {
+            this.confirmBulkResult.set(result);
+            this.confirmBulkResultDialogVisible.set(true);
+            this.selectedBills.set([]);
+            this.load();
+          },
+          error: () => {},
+        });
+      },
+    );
   }
 
   confirmBulkCreate(): void {
@@ -156,9 +195,8 @@ export class MonthlyBillsPage implements OnInit {
       });
   }
 
-  openDetail(bill: MonthlyBillListItem, editable = false): void {
+  openDetail(bill: MonthlyBillListItem): void {
     this.detailBill.set(bill);
-    this.detailEditable.set(editable);
     this.newFeeCategoryId.set(null);
     this.newFeeAmount.set(null);
     this.newFeeNote.set('');

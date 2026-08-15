@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ListQuery, PageResponse } from '../models/api-response.model';
 import {
+  BulkBillConfirmResult,
   BulkMonthlyBillCreateRequest,
   BulkMonthlyBillCreateResult,
   ExtraFeeItemRequest,
@@ -58,5 +59,13 @@ export class BillingService {
 
   recordPayment(id: number, request: PaymentRequest): Observable<MonthlyBillResponse> {
     return this.api.post<MonthlyBillResponse>(`${environment.apiUrl}/monthly-bills/${id}/payments`, request);
+  }
+
+  confirmBill(id: number): Observable<MonthlyBillResponse> {
+    return this.api.patch<MonthlyBillResponse>(`${environment.apiUrl}/monthly-bills/${id}/confirm`, {});
+  }
+
+  confirmBulk(billIds: number[]): Observable<BulkBillConfirmResult> {
+    return this.api.patch<BulkBillConfirmResult>(`${environment.apiUrl}/monthly-bills/confirm-bulk`, { billIds });
   }
 }

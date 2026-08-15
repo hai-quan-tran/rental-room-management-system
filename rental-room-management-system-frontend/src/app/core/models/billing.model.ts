@@ -82,3 +82,8 @@ export interface BulkMonthlyBillCreateResult {
   alreadyExistsCount: number;
   notApplicableCount: number;
 }
+
+export interface BulkBillConfirmResult {
+  confirmedBills: MonthlyBillListItem[];
+  skippedCount: number;
+}

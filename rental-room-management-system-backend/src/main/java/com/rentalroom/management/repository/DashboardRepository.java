@@ -106,7 +106,7 @@ public interface DashboardRepository extends Repository<Room, Long> {
             JOIN contract c ON c.id = mb.contract_id
             JOIN room r ON r.id = c.room_id
             JOIN branch b ON b.id = r.branch_id
-            WHERE r.branch_id IN (:branchIds) AND mb.remaining_amount > 0
+            WHERE r.branch_id IN (:branchIds) AND mb.remaining_amount > 0 AND mb.payment_status != 'CHUA_XAC_NHAN'
             ORDER BY mb.bill_year DESC, mb.bill_month DESC, mb.remaining_amount DESC
             """, nativeQuery = true)
     List<UnpaidInvoiceRoomRow> unpaidInvoiceRooms(@Param("branchIds") List<Long> branchIds);

@@ -81,7 +81,7 @@ public class MonthlyBill {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status", length = 30, nullable = false)
-    private PaymentStatus paymentStatus = PaymentStatus.CHUA_THANH_TOAN;
+    private PaymentStatus paymentStatus = PaymentStatus.CHUA_XAC_NHAN;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

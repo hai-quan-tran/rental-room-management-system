@@ -239,6 +239,7 @@
     "TOTAL_AMOUNT": "Tổng tiền",
     "PAID_AMOUNT": "Đã thanh toán",
     "REMAINING_AMOUNT": "Còn nợ",
+    "STATUS_CHUA_XAC_NHAN": "Chưa xác nhận",
     "STATUS_CHUA_THANH_TOAN": "Chưa thanh toán",
     "STATUS_THANH_TOAN_MOT_PHAN": "Thanh toán một phần",
     "STATUS_DA_THANH_TOAN": "Đã thanh toán",
@@ -251,7 +252,11 @@
     "RECORD_PAYMENT_ACTION": "Ghi nhận thanh toán",
     "PAYMENT_SUCCESS": "Ghi nhận thanh toán thành công",
     "PAYMENT_EXCEEDS_REMAINING": "Số tiền thanh toán vượt quá số tiền còn nợ",
-    "ALREADY_PAID_NOTICE": "Hóa đơn này đã thanh toán đủ."
+    "ALREADY_PAID_NOTICE": "Hóa đơn này đã thanh toán đủ.",
+    "CONFIRM_BILL_ACTION": "Xác nhận hóa đơn",
+    "CONFIRM_BILL_CONFIRM": "Xác nhận hóa đơn này? Sau khi xác nhận sẽ không thể sửa chi phí phát sinh hoặc chỉ số điện nước nữa, chỉ có thể ghi nhận thanh toán.",
+    "CONFIRM_BILL_SUCCESS": "Đã xác nhận hóa đơn",
+    "BILL_LOCKED_NOTICE": "Hóa đơn đã được xác nhận, không thể chỉnh sửa."
   },
   "MONTHLY_BILLS": {
     "ROOM": "Phòng",
@@ -260,7 +265,13 @@
     "BULK_CREATE_CONFIRM": "Hệ thống sẽ tạo hóa đơn cho các phòng đang có hợp đồng hiệu lực (theo tháng/năm và chi nhánh đang lọc) mà chưa có hóa đơn tháng này — tiền điện/nước sẽ tự tính nếu đã có chỉ số + đơn giá, còn lại chi phí phát sinh khác vẫn cần nhập riêng cho từng phòng sau đó. Bạn có chắc chắn muốn tiếp tục?",
     "BULK_RESULT_TITLE": "Hóa đơn vừa tạo",
     "BULK_CREATE_CREATED": "Đã tạo hóa đơn:",
-    "BULK_CREATE_SKIPPED": "Đã bỏ qua:"
+    "BULK_CREATE_SKIPPED": "Đã bỏ qua:",
+    "CONFIRM_BULK_ACTION": "Xác nhận hàng loạt",
+    "CONFIRM_BULK_CONFIRM_PREFIX": "Xác nhận",
+    "CONFIRM_BULK_CONFIRM_SUFFIX": "hóa đơn đã chọn? Sau khi xác nhận sẽ không thể sửa chi phí phát sinh hoặc chỉ số điện nước nữa.",
+    "CONFIRM_BULK_RESULT_TITLE": "Kết quả xác nhận hàng loạt",
+    "CONFIRM_BULK_CONFIRMED": "Đã xác nhận:",
+    "CONFIRM_BULK_SKIPPED": "Đã bỏ qua (đã xác nhận trước đó):"
   },
   "CHECKOUT": {
     "NO_ACTIVE_CONTRACT": "Phòng chưa có hợp đồng đang hiệu lực để trả phòng.",
@@ -292,8 +303,8 @@
     "AMOUNT": "Thành tiền",
     "SYNC_UPDATED": "Đã lưu chỉ số và cập nhật hóa đơn tháng này.",
     "SYNC_NO_BILL_YET": "Đã lưu chỉ số. Hóa đơn tháng này sẽ tự áp dụng số tiền khi được tạo.",
-    "SYNC_SKIPPED_PAID": "Đã lưu chỉ số, nhưng hóa đơn tháng này đã thanh toán đủ nên không cập nhật số tiền.",
+    "SYNC_SKIPPED_CONFIRMED": "Đã lưu chỉ số, nhưng hóa đơn tháng này đã được xác nhận nên không cập nhật số tiền.",
     "SYNC_SKIPPED_AMBIGUOUS": "Đã lưu chỉ số, nhưng phòng có nhiều hóa đơn trùng tháng nên cần cập nhật tiền thủ công.",
-    "BILL_FULLY_PAID_LOCKED": "Hóa đơn tháng này đã thanh toán đủ, không thể sửa chỉ số."
+    "BILL_LOCKED": "Hóa đơn tháng này đã được xác nhận, không thể sửa chỉ số."
   }
 }

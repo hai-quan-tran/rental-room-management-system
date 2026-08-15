@@ -6,8 +6,8 @@ public enum BillSyncStatus {
     NO_BILL_YET,
     /** Exactly 1 matching bill was found and its extra-fee item was updated. */
     UPDATED,
-    /** A matching bill exists but is already fully paid — amount left untouched, reading still saved. */
-    SKIPPED_PAID,
+    /** A matching bill exists but has already been confirmed (locked) — amount left untouched, reading still saved. */
+    SKIPPED_CONFIRMED,
     /** More than 1 bill matched the room+month (contract changed mid-month) — ambiguous, left untouched. */
     SKIPPED_AMBIGUOUS_CONTRACT
 }

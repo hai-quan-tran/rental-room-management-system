@@ -49,7 +49,7 @@
                 [ngModel]="cell.oldReadingDraft"
                 (ngModelChange)="cell.oldReadingDraft = $event"
                 [min]="0"
-                [disabled]="cell.billFullyPaid"
+                [disabled]="cell.billLocked"
                 [placeholder]="'METER_READING.OLD_READING' | translate"
               />
             }
@@ -59,14 +59,14 @@
               [ngModel]="cell.newReadingDraft"
               (ngModelChange)="cell.newReadingDraft = $event"
               [min]="0"
-              [disabled]="cell.billFullyPaid"
+              [disabled]="cell.billLocked"
             />
           </td>
           <td>{{ consumption(cell) }}</td>
           <td>{{ amount(cell) !== null ? (amount(cell) | number: '1.0-0') + ' ₫' : '—' }}</td>
           <td>
-            @if (cell.billFullyPaid) {
-              <i class="pi pi-lock" title="{{ 'METER_READING.BILL_FULLY_PAID_LOCKED' | translate }}"></i>
+            @if (cell.billLocked) {
+              <i class="pi pi-lock" title="{{ 'METER_READING.BILL_LOCKED' | translate }}"></i>
             } @else {
               <button
                 type="button"

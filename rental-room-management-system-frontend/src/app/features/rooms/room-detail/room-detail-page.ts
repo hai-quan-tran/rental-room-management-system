@@ -48,6 +48,8 @@ import { TenantService } from '../../../core/services/tenant.service';
 import { dateToYearMonth, fromIsoDate, toIsoDate } from '../../../core/utils/date.util';
 import { displayOr } from '../../../shared/utils/display.util';
 import {
+  canEditBillItems,
+  canRecordPayment,
   paymentStatusSeverity,
   roomStatusSeverity,
 } from '../../../shared/utils/status-severity.util';
@@ -113,6 +115,8 @@ export class RoomDetailPage implements OnInit {
   readonly activeTab = signal('0');
   readonly paymentStatusSeverity = paymentStatusSeverity;
   readonly roomStatusSeverity = roomStatusSeverity;
+  readonly canEditBillItems = canEditBillItems;
+  readonly canRecordPayment = canRecordPayment;
   readonly displayOr = displayOr;
 
   private roomId: number | null = null;
@@ -187,6 +191,7 @@ export class RoomDetailPage implements OnInit {
   readonly newPaymentNote = signal('');
 
   readonly paymentStatusOptions = translatedOptions(this.translate, [
+    { labelKey: 'BILLING.STATUS_CHUA_XAC_NHAN', value: PaymentStatus.CHUA_XAC_NHAN },
     { labelKey: 'BILLING.STATUS_CHUA_THANH_TOAN', value: PaymentStatus.CHUA_THANH_TOAN },
     { labelKey: 'BILLING.STATUS_THANH_TOAN_MOT_PHAN', value: PaymentStatus.THANH_TOAN_MOT_PHAN },
     { labelKey: 'BILLING.STATUS_DA_THANH_TOAN', value: PaymentStatus.DA_THANH_TOAN },
@@ -616,6 +621,22 @@ export class RoomDetailPage implements OnInit {
     this.confirmService.confirm(this.translate.instant('BILLING.DELETE_FEE_CONFIRM'), () => {
       this.billingService.deleteExtraFeeItem(bill.bill.id, item.id).subscribe({
         next: () => this.refreshSelectedBill(),
+        error: () => {},
+      });
+    });
+  }
+
+  confirmBill(): void {
+    const bill = this.billDetail();
+    if (!bill) {
+      return;
+    }
+    this.confirmService.confirm(this.translate.instant('BILLING.CONFIRM_BILL_CONFIRM'), () => {
+      this.billingService.confirmBill(bill.bill.id).subscribe({
+        next: () => {
+          this.notification.success(this.translate.instant('BILLING.CONFIRM_BILL_SUCCESS'));
+          this.refreshSelectedBill();
+        },
         error: () => {},
       });
     });

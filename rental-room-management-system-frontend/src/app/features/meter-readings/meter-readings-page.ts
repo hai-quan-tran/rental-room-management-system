@@ -25,7 +25,7 @@ interface EditableCell {
   oldReadingDraft: number | null;
   newReadingDraft: number | null;
   unitPrice: number | null;
-  billFullyPaid: boolean;
+  billLocked: boolean;
 }
 
 interface EditableRow {
@@ -43,7 +43,7 @@ interface ColumnDef {
 const BILL_SYNC_MESSAGE_KEY: Record<BillSyncStatus, string> = {
   UPDATED: 'METER_READING.SYNC_UPDATED',
   NO_BILL_YET: 'METER_READING.SYNC_NO_BILL_YET',
-  SKIPPED_PAID: 'METER_READING.SYNC_SKIPPED_PAID',
+  SKIPPED_CONFIRMED: 'METER_READING.SYNC_SKIPPED_CONFIRMED',
   SKIPPED_AMBIGUOUS_CONTRACT: 'METER_READING.SYNC_SKIPPED_AMBIGUOUS',
 };
 
@@ -118,7 +118,7 @@ export class MeterReadingsPage {
   }
 
   canSave(cell: EditableCell): boolean {
-    if (cell.billFullyPaid || cell.newReadingDraft === null) {
+    if (cell.billLocked || cell.newReadingDraft === null) {
       return false;
     }
     return cell.previousReading !== null || cell.oldReadingDraft !== null;
@@ -162,7 +162,7 @@ export class MeterReadingsPage {
         oldReadingDraft: null,
         newReadingDraft: cell.currentReading,
         unitPrice: cell.unitPrice,
-        billFullyPaid: cell.billFullyPaid,
+        billLocked: cell.billLocked,
       })),
     };
   }

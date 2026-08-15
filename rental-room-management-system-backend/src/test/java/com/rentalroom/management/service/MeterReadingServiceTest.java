@@ -205,4 +205,36 @@ class MeterReadingServiceTest {
 
         verify(meterReadingRepository, Mockito.never()).save(any());
     }
+
+    @Test
+    void billConfirmedButNotYetPaid_rejectsReadingChange() {
+        // Confirming a bill locks it even before any payment is recorded — not just once fully paid.
+        MonthlyBill confirmedBill = new MonthlyBill();
+        confirmedBill.setPaymentStatus(PaymentStatus.CHUA_THANH_TOAN);
+        when(monthlyBillRepository.findByContract_Room_IdAndBillYearAndBillMonth(50L, 2026, 3))
+                .thenReturn(List.of(confirmedBill));
+
+        MeterReadingRequest request = new MeterReadingRequest(10L, 3, 2026, new BigDecimal("100"), new BigDecimal("125"), null);
+        assertThrows(BusinessException.class, () -> meterReadingService.upsertReading(50L, request));
+
+        verify(meterReadingRepository, Mockito.never()).save(any());
+    }
+
+    @Test
+    void billStillUnconfirmed_allowsReadingChange() {
+        MonthlyBill unconfirmedBill = new MonthlyBill();
+        unconfirmedBill.setPaymentStatus(PaymentStatus.CHUA_XAC_NHAN);
+        when(monthlyBillRepository.findByContract_Room_IdAndBillYearAndBillMonth(50L, 2026, 3))
+                .thenReturn(List.of(unconfirmedBill));
+        when(meterReadingRepository.findByRoomIdAndExtraFeeCategoryIdAndBillYearAndBillMonth(50L, 10L, 2026, 3))
+                .thenReturn(Optional.empty());
+        when(meterReadingRepository.findByRoomIdAndExtraFeeCategoryIdOrderByBillYearDescBillMonthDesc(50L, 10L))
+                .thenReturn(List.of());
+        when(utilityRateService.findCurrentRate(eq(1L), eq(10L), any())).thenReturn(Optional.empty());
+
+        MeterReadingRequest request = new MeterReadingRequest(10L, 3, 2026, new BigDecimal("100"), new BigDecimal("125"), null);
+        assertDoesNotThrow(() -> meterReadingService.upsertReading(50L, request));
+
+        verify(meterReadingRepository).save(any());
+    }
 }

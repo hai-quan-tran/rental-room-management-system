@@ -1,4 +1,4 @@
-export type BillSyncStatus = 'NO_BILL_YET' | 'UPDATED' | 'SKIPPED_PAID' | 'SKIPPED_AMBIGUOUS_CONTRACT';
+export type BillSyncStatus = 'NO_BILL_YET' | 'UPDATED' | 'SKIPPED_CONFIRMED' | 'SKIPPED_AMBIGUOUS_CONTRACT';
 
 /** 1 metered category's reading state for 1 room+month in the "Nhập chỉ số điện nước" grid. */
 export interface MeterReadingCellResponse {
@@ -11,7 +11,7 @@ export interface MeterReadingCellResponse {
   unitPrice: number | null;
   amount: number | null;
   note: string | null;
-  billFullyPaid: boolean;
+  billLocked: boolean;
 }
 
 export interface MeterReadingGridRowResponse {

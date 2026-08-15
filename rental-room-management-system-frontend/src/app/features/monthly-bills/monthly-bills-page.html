@@ -28,6 +28,16 @@
       [loading]="loading()"
       (click)="confirmBulkCreate()"
     ></button>
+    @if (selectedBills().length > 0) {
+      <button
+        type="button"
+        pButton
+        icon="pi pi-check"
+        [label]="'MONTHLY_BILLS.CONFIRM_BULK_ACTION' | translate"
+        [loading]="loading()"
+        (click)="confirmSelectedBulk()"
+      ></button>
+    }
   </div>
 
   <p-table
@@ -39,10 +49,12 @@
     [totalRecords]="totalRecords()"
     [loading]="loading()"
     (onLazyLoad)="load($event)"
+    [(selection)]="selectedBills"
     dataKey="id"
   >
     <ng-template #header>
       <tr>
+        <th style="width: 3rem"><p-tableHeaderCheckbox /></th>
         <th>{{ 'MONTHLY_BILLS.ROOM' | translate }}</th>
         <th>{{ 'BILLING.MONTH_YEAR' | translate }}</th>
         <th>{{ 'BILLING.RENT_AMOUNT' | translate }}</th>
@@ -54,14 +66,19 @@
     </ng-template>
 
     <ng-template #body let-bill>
-      <tr class="clickable-row" (click)="openDetail(bill)">
-        <td>{{ roomBranchLabel(bill.roomCode, bill.branchName) }}</td>
-        <td>{{ bill.billMonth }}/{{ bill.billYear }}</td>
-        <td>{{ bill.rentAmount | number: '1.0-0' }} ₫</td>
-        <td>{{ bill.totalExtraFee | number: '1.0-0' }} ₫</td>
-        <td>{{ bill.totalAmount | number: '1.0-0' }} ₫</td>
-        <td>{{ bill.remainingAmount | number: '1.0-0' }} ₫</td>
-        <td>
+      <tr class="clickable-row">
+        <td (click)="$event.stopPropagation()">
+          @if (isUnconfirmed(bill)) {
+            <p-tableCheckbox [value]="bill" />
+          }
+        </td>
+        <td (click)="openDetail(bill)">{{ roomBranchLabel(bill.roomCode, bill.branchName) }}</td>
+        <td (click)="openDetail(bill)">{{ bill.billMonth }}/{{ bill.billYear }}</td>
+        <td (click)="openDetail(bill)">{{ bill.rentAmount | number: '1.0-0' }} ₫</td>
+        <td (click)="openDetail(bill)">{{ bill.totalExtraFee | number: '1.0-0' }} ₫</td>
+        <td (click)="openDetail(bill)">{{ bill.totalAmount | number: '1.0-0' }} ₫</td>
+        <td (click)="openDetail(bill)">{{ bill.remainingAmount | number: '1.0-0' }} ₫</td>
+        <td (click)="openDetail(bill)">
           <p-tag
             [value]="'BILLING.STATUS_' + bill.paymentStatus | translate"
             [severity]="paymentStatusSeverity(bill.paymentStatus)"
@@ -72,7 +89,7 @@
 
     <ng-template #emptymessage>
       <tr>
-        <td colspan="7">{{ 'COMMON.NO_DATA' | translate }}</td>
+        <td colspan="8">{{ 'COMMON.NO_DATA' | translate }}</td>
       </tr>
     </ng-template>
   </p-table>
@@ -104,7 +121,7 @@
           </tr>
         </ng-template>
         <ng-template #body let-bill>
-          <tr class="clickable-row" (click)="openDetail(bill, true)">
+          <tr class="clickable-row" (click)="openDetail(bill)">
             <td>{{ roomBranchLabel(bill.roomCode, bill.branchName) }}</td>
             <td>{{ bill.billMonth }}/{{ bill.billYear }}</td>
             <td>{{ bill.rentAmount | number: '1.0-0' }} ₫</td>
@@ -125,6 +142,20 @@
           </tr>
         </ng-template>
       </p-table>
+    }
+  </p-dialog>
+
+  <p-dialog
+    [header]="'MONTHLY_BILLS.CONFIRM_BULK_RESULT_TITLE' | translate"
+    [modal]="true"
+    [visible]="confirmBulkResultDialogVisible()"
+    (visibleChange)="confirmBulkResultDialogVisible.set($event)"
+  >
+    @if (confirmBulkResult(); as result) {
+      <p>
+        {{ 'MONTHLY_BILLS.CONFIRM_BULK_CONFIRMED' | translate }} {{ result.confirmedBills.length }}.
+        {{ 'MONTHLY_BILLS.CONFIRM_BULK_SKIPPED' | translate }} {{ result.skippedCount }}.
+      </p>
     }
   </p-dialog>
 
@@ -158,7 +189,7 @@
               <th>{{ 'BILLING.CATEGORY' | translate }}</th>
               <th>{{ 'DEBT.AMOUNT' | translate }}</th>
               <th>{{ 'ROOM_TYPE.NOTE' | translate }}</th>
-              @if (detailEditable() && detail.bill.paymentStatus !== 'DA_THANH_TOAN') {
+              @if (canEditBillItems(detail.bill.paymentStatus)) {
                 <th></th>
               }
             </tr>
@@ -168,7 +199,7 @@
               <td>{{ item.extraFeeCategoryName }}</td>
               <td>{{ item.amount | number: '1.0-0' }} ₫</td>
               <td>{{ displayOr(item.note) }}</td>
-              @if (detailEditable() && detail.bill.paymentStatus !== 'DA_THANH_TOAN') {
+              @if (canEditBillItems(detail.bill.paymentStatus)) {
                 <td>
                   <button
                     type="button"
@@ -189,7 +220,7 @@
           </ng-template>
         </p-table>
 
-        @if (detailEditable() && detail.bill.paymentStatus !== 'DA_THANH_TOAN') {
+        @if (canEditBillItems(detail.bill.paymentStatus)) {
           <div class="room-fee-form">
             <p-select
               [options]="extraFeeCategories()"
@@ -226,99 +257,97 @@
         }
       </div>
 
-      @if (!detailEditable()) {
-        <div class="detail-page__section">
-          <h3 class="detail-page__section-title">{{ 'BILLING.PAYMENTS' | translate }}</h3>
+      <div class="detail-page__section">
+        <h3 class="detail-page__section-title">{{ 'BILLING.PAYMENTS' | translate }}</h3>
 
-          <div class="room-contract-summary">
-            <div>
-              <span>{{ 'BILLING.TOTAL_AMOUNT' | translate }}:</span>
-              {{ detail.bill.totalAmount | number: '1.0-0' }} ₫
-            </div>
-            <div>
-              <span>{{ 'BILLING.REMAINING_AMOUNT' | translate }}:</span>
-              {{ detail.bill.remainingAmount | number: '1.0-0' }} ₫
-            </div>
+        <div class="room-contract-summary">
+          <div>
+            <span>{{ 'BILLING.TOTAL_AMOUNT' | translate }}:</span>
+            {{ detail.bill.totalAmount | number: '1.0-0' }} ₫
           </div>
-
-          <p-table [value]="detail.payments" dataKey="id">
-            <ng-template #header>
-              <tr>
-                <th>{{ 'DEBT.AMOUNT' | translate }}</th>
-                <th>{{ 'BILLING.PAYMENT_DATE' | translate }}</th>
-                <th>{{ 'BILLING.PAYMENT_METHOD' | translate }}</th>
-                <th>{{ 'ROOM_TYPE.NOTE' | translate }}</th>
-              </tr>
-            </ng-template>
-            <ng-template #body let-payment>
-              <tr>
-                <td>{{ payment.amount | number: '1.0-0' }} ₫</td>
-                <td>{{ payment.paymentDate }}</td>
-                <td>{{ displayOr(payment.method) }}</td>
-                <td>{{ displayOr(payment.note) }}</td>
-              </tr>
-            </ng-template>
-            <ng-template #emptymessage>
-              <tr>
-                <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
-              </tr>
-            </ng-template>
-          </p-table>
-
-          @if (detail.bill.paymentStatus !== 'DA_THANH_TOAN') {
-            <div class="room-payment-form">
-              <p-inputnumber
-                [ngModel]="newPaymentAmount()"
-                (ngModelChange)="newPaymentAmount.set($event)"
-                mode="decimal"
-                [min]="0"
-                [max]="detail.bill.remainingAmount"
-                suffix=" ₫"
-                [placeholder]="'DEBT.AMOUNT' | translate"
-              />
-              <p-datepicker
-                [ngModel]="newPaymentDate()"
-                (ngModelChange)="newPaymentDate.set($event)"
-                dateFormat="dd/mm/yy"
-                [showIcon]="true"
-                appendTo="body"
-              />
-              <input
-                type="text"
-                pInputText
-                [ngModel]="newPaymentMethod()"
-                (ngModelChange)="newPaymentMethod.set($event)"
-                [placeholder]="'BILLING.PAYMENT_METHOD' | translate"
-              />
-              <input
-                type="text"
-                pInputText
-                [ngModel]="newPaymentNote()"
-                (ngModelChange)="newPaymentNote.set($event)"
-                [placeholder]="'ROOM_TYPE.NOTE' | translate"
-              />
-              <button
-                type="button"
-                pButton
-                icon="pi pi-plus"
-                [label]="'BILLING.RECORD_PAYMENT_ACTION' | translate"
-                [loading]="loading()"
-                [disabled]="
-                  !!newPaymentAmount() && newPaymentAmount()! > detail.bill.remainingAmount
-                "
-                (click)="recordPayment()"
-              ></button>
-            </div>
-            @if (newPaymentAmount() && newPaymentAmount()! > detail.bill.remainingAmount) {
-              <small class="field-error">{{
-                'BILLING.PAYMENT_EXCEEDS_REMAINING' | translate
-              }}</small>
-            }
-          } @else {
-            <p>{{ 'BILLING.ALREADY_PAID_NOTICE' | translate }}</p>
-          }
+          <div>
+            <span>{{ 'BILLING.REMAINING_AMOUNT' | translate }}:</span>
+            {{ detail.bill.remainingAmount | number: '1.0-0' }} ₫
+          </div>
         </div>
-      }
+
+        <p-table [value]="detail.payments" dataKey="id">
+          <ng-template #header>
+            <tr>
+              <th>{{ 'DEBT.AMOUNT' | translate }}</th>
+              <th>{{ 'BILLING.PAYMENT_DATE' | translate }}</th>
+              <th>{{ 'BILLING.PAYMENT_METHOD' | translate }}</th>
+              <th>{{ 'ROOM_TYPE.NOTE' | translate }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-payment>
+            <tr>
+              <td>{{ payment.amount | number: '1.0-0' }} ₫</td>
+              <td>{{ payment.paymentDate }}</td>
+              <td>{{ displayOr(payment.method) }}</td>
+              <td>{{ displayOr(payment.note) }}</td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="4">{{ 'COMMON.NO_DATA' | translate }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+
+        @if (canRecordPayment(detail.bill.paymentStatus)) {
+          <div class="room-payment-form">
+            <p-inputnumber
+              [ngModel]="newPaymentAmount()"
+              (ngModelChange)="newPaymentAmount.set($event)"
+              mode="decimal"
+              [min]="0"
+              [max]="detail.bill.remainingAmount"
+              suffix=" ₫"
+              [placeholder]="'DEBT.AMOUNT' | translate"
+            />
+            <p-datepicker
+              [ngModel]="newPaymentDate()"
+              (ngModelChange)="newPaymentDate.set($event)"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              appendTo="body"
+            />
+            <input
+              type="text"
+              pInputText
+              [ngModel]="newPaymentMethod()"
+              (ngModelChange)="newPaymentMethod.set($event)"
+              [placeholder]="'BILLING.PAYMENT_METHOD' | translate"
+            />
+            <input
+              type="text"
+              pInputText
+              [ngModel]="newPaymentNote()"
+              (ngModelChange)="newPaymentNote.set($event)"
+              [placeholder]="'ROOM_TYPE.NOTE' | translate"
+            />
+            <button
+              type="button"
+              pButton
+              icon="pi pi-plus"
+              [label]="'BILLING.RECORD_PAYMENT_ACTION' | translate"
+              [loading]="loading()"
+              [disabled]="
+                !!newPaymentAmount() && newPaymentAmount()! > detail.bill.remainingAmount
+              "
+              (click)="recordPayment()"
+            ></button>
+          </div>
+          @if (newPaymentAmount() && newPaymentAmount()! > detail.bill.remainingAmount) {
+            <small class="field-error">{{
+              'BILLING.PAYMENT_EXCEEDS_REMAINING' | translate
+            }}</small>
+          }
+        } @else if (detail.bill.paymentStatus === 'DA_THANH_TOAN') {
+          <p>{{ 'BILLING.ALREADY_PAID_NOTICE' | translate }}</p>
+        }
+      </div>
     }
   </p-dialog>
 </div>

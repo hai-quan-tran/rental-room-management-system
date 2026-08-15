@@ -1,15 +1,22 @@
 package com.rentalroom.management.service;
 
+import com.rentalroom.management.dto.request.ExtraFeeItemRequest;
 import com.rentalroom.management.dto.request.MonthlyBillCreateRequest;
+import com.rentalroom.management.dto.request.PaymentRequest;
+import com.rentalroom.management.dto.response.BulkBillConfirmResponse;
+import com.rentalroom.management.dto.response.MonthlyBillResponse;
 import com.rentalroom.management.entity.Branch;
 import com.rentalroom.management.entity.Contract;
 import com.rentalroom.management.entity.ExtraFeeCategory;
 import com.rentalroom.management.entity.ExtraFeeItem;
 import com.rentalroom.management.entity.MeterReading;
+import com.rentalroom.management.entity.MonthlyBill;
 import com.rentalroom.management.entity.Room;
 import com.rentalroom.management.entity.UtilityRate;
 import com.rentalroom.management.enums.ContractStatus;
+import com.rentalroom.management.enums.PaymentStatus;
 import com.rentalroom.management.enums.Role;
+import com.rentalroom.management.exception.BusinessException;
 import com.rentalroom.management.repository.BranchRepository;
 import com.rentalroom.management.repository.ContractRepository;
 import com.rentalroom.management.repository.ExtraFeeCategoryRepository;
@@ -37,6 +44,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -169,5 +177,70 @@ class BillingServiceTest {
                 .filter(item -> item.getExtraFeeCategory().getId().equals(11L))
                 .findFirst().orElseThrow();
         assertEquals(BigDecimal.ZERO, waterItem.getAmount());
+    }
+
+    @Test
+    void confirmBill_unconfirmed_movesToChuaThanhToan() {
+        MonthlyBill bill = newBill(700L, PaymentStatus.CHUA_XAC_NHAN);
+        when(monthlyBillRepository.findById(700L)).thenReturn(Optional.of(bill));
+
+        MonthlyBillResponse response = billingService.confirmBill(700L);
+
+        assertEquals(PaymentStatus.CHUA_THANH_TOAN, response.paymentStatus());
+    }
+
+    @Test
+    void confirmBill_alreadyConfirmed_throwsConflict() {
+        MonthlyBill bill = newBill(701L, PaymentStatus.CHUA_THANH_TOAN);
+        when(monthlyBillRepository.findById(701L)).thenReturn(Optional.of(bill));
+
+        assertThrows(BusinessException.class, () -> billingService.confirmBill(701L));
+    }
+
+    @Test
+    void addExtraFeeItem_afterConfirm_throwsConflict() {
+        MonthlyBill bill = newBill(702L, PaymentStatus.CHUA_THANH_TOAN);
+        when(monthlyBillRepository.findById(702L)).thenReturn(Optional.of(bill));
+
+        assertThrows(BusinessException.class, () -> billingService.addExtraFeeItem(
+                702L, new ExtraFeeItemRequest(10L, new BigDecimal("50000"), "note")));
+    }
+
+    @Test
+    void deleteExtraFeeItem_afterConfirm_throwsConflict() {
+        MonthlyBill bill = newBill(703L, PaymentStatus.THANH_TOAN_MOT_PHAN);
+        when(monthlyBillRepository.findById(703L)).thenReturn(Optional.of(bill));
+
+        assertThrows(BusinessException.class, () -> billingService.deleteExtraFeeItem(703L, 1L));
+    }
+
+    @Test
+    void recordPayment_beforeConfirm_throwsConflict() {
+        MonthlyBill bill = newBill(704L, PaymentStatus.CHUA_XAC_NHAN);
+        when(monthlyBillRepository.findById(704L)).thenReturn(Optional.of(bill));
+
+        assertThrows(BusinessException.class, () -> billingService.recordPayment(
+                704L, new PaymentRequest(new BigDecimal("100000"), LocalDate.of(2026, 3, 5), "CASH", null)));
+    }
+
+    @Test
+    void confirmBulk_countsSkippedForAlreadyConfirmed() {
+        MonthlyBill unconfirmed = newBill(705L, PaymentStatus.CHUA_XAC_NHAN);
+        MonthlyBill confirmed = newBill(706L, PaymentStatus.DA_THANH_TOAN);
+        when(monthlyBillRepository.findById(705L)).thenReturn(Optional.of(unconfirmed));
+        when(monthlyBillRepository.findById(706L)).thenReturn(Optional.of(confirmed));
+
+        BulkBillConfirmResponse response = billingService.confirmBulk(List.of(705L, 706L));
+
+        assertEquals(1, response.confirmedBills().size());
+        assertEquals(1, response.skippedCount());
+    }
+
+    private MonthlyBill newBill(Long id, PaymentStatus status) {
+        MonthlyBill bill = new MonthlyBill();
+        bill.setId(id);
+        bill.setContract(contract);
+        bill.setPaymentStatus(status);
+        return bill;
     }
 }

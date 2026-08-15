@@ -513,7 +513,20 @@
                 {{ 'BILLING.EXTRA_FEE_ITEMS' | translate }} — {{ detail.bill.billMonth }}/{{
                   detail.bill.billYear
                 }}
+                @if (canEditBillItems(detail.bill.paymentStatus)) {
+                  <button
+                    type="button"
+                    pButton
+                    icon="pi pi-check"
+                    [label]="'BILLING.CONFIRM_BILL_ACTION' | translate"
+                    (click)="confirmBill()"
+                  ></button>
+                }
               </h3>
+
+              @if (!canEditBillItems(detail.bill.paymentStatus)) {
+                <p>{{ 'BILLING.BILL_LOCKED_NOTICE' | translate }}</p>
+              }
 
               <p-table [value]="detail.extraFeeItems" dataKey="id">
                 <ng-template #header>
@@ -521,7 +534,7 @@
                     <th>{{ 'BILLING.CATEGORY' | translate }}</th>
                     <th>{{ 'DEBT.AMOUNT' | translate }}</th>
                     <th>{{ 'ROOM_TYPE.NOTE' | translate }}</th>
-                    @if (detail.bill.paymentStatus !== 'DA_THANH_TOAN') {
+                    @if (canEditBillItems(detail.bill.paymentStatus)) {
                       <th></th>
                     }
                   </tr>
@@ -531,7 +544,7 @@
                     <td>{{ item.extraFeeCategoryName }}</td>
                     <td>{{ item.amount | number: '1.0-0' }} ₫</td>
                     <td>{{ displayOr(item.note) }}</td>
-                    @if (detail.bill.paymentStatus !== 'DA_THANH_TOAN') {
+                    @if (canEditBillItems(detail.bill.paymentStatus)) {
                       <td>
                         <button
                           type="button"
@@ -552,7 +565,7 @@
                 </ng-template>
               </p-table>
 
-              @if (detail.bill.paymentStatus !== 'DA_THANH_TOAN') {
+              @if (canEditBillItems(detail.bill.paymentStatus)) {
                 <div class="room-fee-form">
                   <p-select
                     [options]="extraFeeCategories()"
@@ -626,7 +639,7 @@
                 </ng-template>
               </p-table>
 
-              @if (detail.bill.paymentStatus !== 'DA_THANH_TOAN') {
+              @if (canRecordPayment(detail.bill.paymentStatus)) {
                 <div class="room-payment-form">
                   <p-inputnumber
                     [ngModel]="newPaymentAmount()"
@@ -673,7 +686,7 @@
                     'BILLING.PAYMENT_EXCEEDS_REMAINING' | translate
                   }}</small>
                 }
-              } @else {
+              } @else if (detail.bill.paymentStatus === 'DA_THANH_TOAN') {
                 <p>{{ 'BILLING.ALREADY_PAID_NOTICE' | translate }}</p>
               }
             </div>

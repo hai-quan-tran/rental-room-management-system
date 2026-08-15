@@ -5,6 +5,7 @@ import com.rentalroom.management.common.util.MoneyUtils;
 import com.rentalroom.management.dto.request.ExtraFeeItemRequest;
 import com.rentalroom.management.dto.request.MonthlyBillCreateRequest;
 import com.rentalroom.management.dto.request.PaymentRequest;
+import com.rentalroom.management.dto.response.BulkBillConfirmResponse;
 import com.rentalroom.management.dto.response.BulkMonthlyBillCreateResponse;
 import com.rentalroom.management.dto.response.ExtraFeeItemResponse;
 import com.rentalroom.management.dto.response.MonthlyBillDetailResponse;
@@ -194,7 +195,7 @@ public class BillingService {
 
     public ExtraFeeItemResponse addExtraFeeItem(Long billId, ExtraFeeItemRequest request) {
         MonthlyBill bill = findBillWithAccessCheck(billId);
-        assertNotFullyPaid(bill);
+        assertEditable(bill);
         ExtraFeeCategory category = extraFeeCategoryRepository.findById(request.extraFeeCategoryId())
                 .orElseThrow(() -> BusinessException.notFound("Không tìm thấy danh mục chi phí"));
 
@@ -211,7 +212,7 @@ public class BillingService {
 
     public void deleteExtraFeeItem(Long billId, Long itemId) {
         MonthlyBill bill = findBillWithAccessCheck(billId);
-        assertNotFullyPaid(bill);
+        assertEditable(bill);
         ExtraFeeItem item = extraFeeItemRepository.findByIdAndMonthlyBillId(itemId, billId)
                 .orElseThrow(() -> BusinessException.notFound("Không tìm thấy khoản chi phí"));
         extraFeeItemRepository.delete(item);
@@ -220,6 +221,9 @@ public class BillingService {
 
     public MonthlyBillResponse recordPayment(Long billId, PaymentRequest request) {
         MonthlyBill bill = findBillWithAccessCheck(billId);
+        if (bill.getPaymentStatus() == PaymentStatus.CHUA_XAC_NHAN) {
+            throw BusinessException.conflict("Hóa đơn chưa được xác nhận, không thể ghi nhận thanh toán");
+        }
         if (request.amount().compareTo(bill.getRemainingAmount()) > 0) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Số tiền thanh toán vượt quá số tiền còn nợ");
         }
@@ -237,6 +241,41 @@ public class BillingService {
         entityManager.flush();
         entityManager.refresh(bill);
         return MonthlyBillResponse.from(bill);
+    }
+
+    /** Confirms a bill: locks it from further extra-fee-item/meter-reading edits, and unblocks payment recording. */
+    public MonthlyBillResponse confirmBill(Long billId) {
+        MonthlyBill bill = findBillWithAccessCheck(billId);
+        if (bill.getPaymentStatus() != PaymentStatus.CHUA_XAC_NHAN) {
+            throw BusinessException.conflict("Hóa đơn đã được xác nhận trước đó");
+        }
+        bill.setPaymentStatus(PaymentStatus.CHUA_THANH_TOAN);
+        MonthlyBill saved = monthlyBillRepository.save(bill);
+        entityManager.flush();
+        entityManager.refresh(saved);
+        return MonthlyBillResponse.from(saved);
+    }
+
+    /**
+     * Confirms every bill in {@code billIds} that's still {@code CHUA_XAC_NHAN}; bills already
+     * confirmed (stale selection/race condition) are skipped and counted, not treated as errors.
+     * A bad id (not found / no branch access) still aborts the whole batch — the caller only ever
+     * sends ids taken from its own branch-scoped bill listing, so that's not expected in practice.
+     */
+    public BulkBillConfirmResponse confirmBulk(List<Long> billIds) {
+        List<MonthlyBillListResponse> confirmed = new ArrayList<>();
+        int skippedCount = 0;
+        for (Long billId : billIds) {
+            MonthlyBill bill = findBillWithAccessCheck(billId);
+            if (bill.getPaymentStatus() != PaymentStatus.CHUA_XAC_NHAN) {
+                skippedCount++;
+                continue;
+            }
+            bill.setPaymentStatus(PaymentStatus.CHUA_THANH_TOAN);
+            confirmed.add(MonthlyBillListResponse.from(monthlyBillRepository.save(bill)));
+        }
+        entityManager.flush();
+        return new BulkBillConfirmResponse(confirmed, skippedCount);
     }
 
     /**
@@ -337,8 +376,8 @@ public class BillingService {
         }
 
         MonthlyBill bill = bills.get(0);
-        if (bill.getPaymentStatus() == PaymentStatus.DA_THANH_TOAN) {
-            return BillSyncStatus.SKIPPED_PAID;
+        if (bill.getPaymentStatus() != PaymentStatus.CHUA_XAC_NHAN) {
+            return BillSyncStatus.SKIPPED_CONFIRMED;
         }
 
         ExtraFeeItem item = extraFeeItemRepository.findByMonthlyBillIdOrderByIdAsc(bill.getId()).stream()
@@ -375,9 +414,9 @@ public class BillingService {
         return new MonthlyBillDetailResponse(MonthlyBillResponse.from(bill), items, payments);
     }
 
-    private void assertNotFullyPaid(MonthlyBill bill) {
-        if (bill.getPaymentStatus() == PaymentStatus.DA_THANH_TOAN) {
-            throw BusinessException.conflict("Hóa đơn đã thanh toán đủ, không thể sửa chi phí phát sinh");
+    private void assertEditable(MonthlyBill bill) {
+        if (bill.getPaymentStatus() != PaymentStatus.CHUA_XAC_NHAN) {
+            throw BusinessException.conflict("Hóa đơn đã được xác nhận, không thể sửa chi phí phát sinh");
         }
     }
 

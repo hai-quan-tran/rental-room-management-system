@@ -93,8 +93,8 @@ public class MeterReadingService {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR,
                     "Danh mục \"" + category.getName() + "\" không phải loại chi phí tính theo chỉ số");
         }
-        if (isBillFullyPaid(roomId, request.billYear(), request.billMonth())) {
-            throw BusinessException.conflict("Hóa đơn tháng này đã thanh toán đủ, không thể sửa chỉ số điện nước");
+        if (isBillLocked(roomId, request.billYear(), request.billMonth())) {
+            throw BusinessException.conflict("Hóa đơn tháng này đã được xác nhận, không thể sửa chỉ số điện nước");
         }
 
         MeterReading reading = meterReadingRepository
@@ -145,7 +145,7 @@ public class MeterReadingService {
         BigDecimal unitPrice = utilityRateService.findCurrentRate(room.getBranch().getId(), category.getId(), referenceDate)
                 .map(UtilityRate::getUnitPrice)
                 .orElse(null);
-        boolean billFullyPaid = isBillFullyPaid(room.getId(), billYear, billMonth);
+        boolean billLocked = isBillLocked(room.getId(), billYear, billMonth);
 
         Optional<MeterReading> current = meterReadingRepository
                 .findByRoomIdAndExtraFeeCategoryIdAndBillYearAndBillMonth(room.getId(), category.getId(), billYear, billMonth);
@@ -156,20 +156,20 @@ public class MeterReadingService {
                     : null;
             return new MeterReadingCellResponse(category.getId(), category.getName(), category.getUnit(),
                     reading.getOldReading(), reading.getNewReading(), reading.getConsumption(), unitPrice, amount,
-                    reading.getNote(), billFullyPaid);
+                    reading.getNote(), billLocked);
         }
 
         BigDecimal previousReading = findPreviousReading(room.getId(), category.getId(), billYear, billMonth)
                 .map(MeterReading::getNewReading)
                 .orElse(null);
         return new MeterReadingCellResponse(category.getId(), category.getName(), category.getUnit(),
-                previousReading, null, null, unitPrice, null, null, billFullyPaid);
+                previousReading, null, null, unitPrice, null, null, billLocked);
     }
 
-    /** A room+month is locked for reading edits once its (unambiguous) bill is fully paid. */
-    private boolean isBillFullyPaid(Long roomId, Integer billYear, Integer billMonth) {
+    /** A room+month is locked for reading edits once its (unambiguous) bill has been confirmed (past CHUA_XAC_NHAN). */
+    private boolean isBillLocked(Long roomId, Integer billYear, Integer billMonth) {
         return monthlyBillRepository.findByContract_Room_IdAndBillYearAndBillMonth(roomId, billYear, billMonth)
-                .stream().anyMatch(bill -> bill.getPaymentStatus() == PaymentStatus.DA_THANH_TOAN);
+                .stream().anyMatch(bill -> bill.getPaymentStatus() != PaymentStatus.CHUA_XAC_NHAN);
     }
 
     /** Most recent reading strictly before the given period — used both to auto-chain {@code oldReading} and for the grid preview. */

@@ -2,10 +2,12 @@ package com.rentalroom.management.controller;
 
 import com.rentalroom.management.common.ApiResponse;
 import com.rentalroom.management.common.PageResponse;
+import com.rentalroom.management.dto.request.BulkBillConfirmRequest;
 import com.rentalroom.management.dto.request.BulkMonthlyBillCreateRequest;
 import com.rentalroom.management.dto.request.ExtraFeeItemRequest;
 import com.rentalroom.management.dto.request.MonthlyBillCreateRequest;
 import com.rentalroom.management.dto.request.PaymentRequest;
+import com.rentalroom.management.dto.response.BulkBillConfirmResponse;
 import com.rentalroom.management.dto.response.BulkMonthlyBillCreateResponse;
 import com.rentalroom.management.dto.response.ExtraFeeItemResponse;
 import com.rentalroom.management.dto.response.MonthlyBillDetailResponse;
@@ -18,6 +20,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -83,5 +86,15 @@ public class BillingController {
     @PostMapping("/api/monthly-bills/{id}/payments")
     public ApiResponse<MonthlyBillResponse> recordPayment(@PathVariable Long id, @Valid @RequestBody PaymentRequest request) {
         return ApiResponse.success("Ghi nhận thanh toán thành công", billingService.recordPayment(id, request));
+    }
+
+    @PatchMapping("/api/monthly-bills/{id}/confirm")
+    public ApiResponse<MonthlyBillResponse> confirm(@PathVariable Long id) {
+        return ApiResponse.success("Xác nhận hóa đơn thành công", billingService.confirmBill(id));
+    }
+
+    @PatchMapping("/api/monthly-bills/confirm-bulk")
+    public ApiResponse<BulkBillConfirmResponse> confirmBulk(@Valid @RequestBody BulkBillConfirmRequest request) {
+        return ApiResponse.success("Xác nhận hóa đơn hàng loạt thành công", billingService.confirmBulk(request.billIds()));
     }
 }
