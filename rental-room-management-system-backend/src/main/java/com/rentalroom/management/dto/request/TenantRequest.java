@@ -15,7 +15,6 @@ public record TenantRequest(
         @Past(message = "Ngày sinh phải trong quá khứ")
         LocalDate dateOfBirth,
 
-        @NotBlank(message = "CCCD không được để trống")
         @Pattern(regexp = "\\d{9}(\\d{3})?", message = "CCCD phải gồm 9 hoặc 12 chữ số")
         String idCardNumber,
 

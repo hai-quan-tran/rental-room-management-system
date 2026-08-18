@@ -10,6 +10,7 @@ import { TableModule } from 'primeng/table';
 import { RoomTypeSummaryResponse } from '../../../core/models/branch.model';
 import { AccountService } from '../../../core/services/account.service';
 import { BranchService } from '../../../core/services/branch.service';
+import { ConfirmService } from '../../../core/services/confirm.service';
 import { LoadingService } from '../../../core/services/loading.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
@@ -31,6 +32,7 @@ export class BranchDetailPage implements OnInit {
   private readonly accountService = inject(AccountService);
   private readonly translate = inject(TranslateService);
   private readonly notification = inject(NotificationService);
+  private readonly confirmService = inject(ConfirmService);
   private readonly loadingService = inject(LoadingService);
 
   readonly loading = this.loadingService.isLoading;
@@ -81,18 +83,21 @@ export class BranchDetailPage implements OnInit {
     }
 
     const request = { name: this.name(), address: this.address(), managerAccountId: this.managerAccountId() };
-    const save$ = this.isNew()
-      ? this.branchService.create(request)
-      : this.branchService.update(this.branchId!, request);
 
-    save$.subscribe({
-      next: () => {
-        this.notification.success(
-          this.translate.instant(this.isNew() ? 'BRANCH.CREATE_SUCCESS' : 'BRANCH.UPDATE_SUCCESS'),
-        );
-        this.router.navigate(['/branches']);
-      },
-      error: () => {},
+    this.confirmService.confirm(this.translate.instant('COMMON.SAVE_CONFIRM'), () => {
+      const save$ = this.isNew()
+        ? this.branchService.create(request)
+        : this.branchService.update(this.branchId!, request);
+
+      save$.subscribe({
+        next: () => {
+          this.notification.success(
+            this.translate.instant(this.isNew() ? 'BRANCH.CREATE_SUCCESS' : 'BRANCH.UPDATE_SUCCESS'),
+          );
+          this.router.navigate(['/branches']);
+        },
+        error: () => {},
+      });
     });
   }
 }

@@ -132,41 +132,45 @@ export class EmployeeDetailPage implements OnInit {
       if (usesExisting ? !this.existingAccountId() : !this.username() || this.password().length < 6) {
         return;
       }
+      this.confirmService.confirm(this.translate.instant('COMMON.SAVE_CONFIRM'), () => {
+        this.employeeService
+          .create({
+            fullName: this.fullName(),
+            dateOfBirth: toIsoDate(dob!),
+            idCardNumber: this.idCardNumber(),
+            phoneNumber: this.phoneNumber(),
+            email: this.email(),
+            existingAccountId: usesExisting ? this.existingAccountId() : null,
+            newAccount: usesExisting ? null : { username: this.username(), password: this.password(), role: this.role() },
+          })
+          .subscribe({
+            next: () => {
+              this.notification.success(this.translate.instant('EMPLOYEE.CREATE_SUCCESS'));
+              this.router.navigate(['/employees']);
+            },
+            error: () => {},
+          });
+      });
+      return;
+    }
+
+    this.confirmService.confirm(this.translate.instant('COMMON.SAVE_CONFIRM'), () => {
       this.employeeService
-        .create({
+        .update(this.employeeId!, {
           fullName: this.fullName(),
           dateOfBirth: toIsoDate(dob!),
           idCardNumber: this.idCardNumber(),
           phoneNumber: this.phoneNumber(),
           email: this.email(),
-          existingAccountId: usesExisting ? this.existingAccountId() : null,
-          newAccount: usesExisting ? null : { username: this.username(), password: this.password(), role: this.role() },
         })
         .subscribe({
           next: () => {
-            this.notification.success(this.translate.instant('EMPLOYEE.CREATE_SUCCESS'));
+            this.notification.success(this.translate.instant('EMPLOYEE.UPDATE_SUCCESS'));
             this.router.navigate(['/employees']);
           },
           error: () => {},
         });
-      return;
-    }
-
-    this.employeeService
-      .update(this.employeeId!, {
-        fullName: this.fullName(),
-        dateOfBirth: toIsoDate(dob!),
-        idCardNumber: this.idCardNumber(),
-        phoneNumber: this.phoneNumber(),
-        email: this.email(),
-      })
-      .subscribe({
-        next: () => {
-          this.notification.success(this.translate.instant('EMPLOYEE.UPDATE_SUCCESS'));
-          this.router.navigate(['/employees']);
-        },
-        error: () => {},
-      });
+    });
   }
 
   remove(): void {

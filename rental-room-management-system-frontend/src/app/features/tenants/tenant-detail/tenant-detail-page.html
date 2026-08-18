@@ -55,7 +55,7 @@
         [ngModel]="idCardNumber()"
         (ngModelChange)="idCardNumber.set($event)"
       />
-      @if (submitted() && !idCardNumber()) {
+      @if (submitted() && isAdult() && !idCardNumber()) {
         <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
       }
     </div>
@@ -83,6 +83,9 @@
         [ngModel]="email()"
         (ngModelChange)="email.set($event)"
       />
+      @if (submitted() && emailRequiredAsRepresentative()) {
+        <small class="field-error">{{ 'TENANT.EMAIL_REQUIRED_REPRESENTATIVE' | translate }}</small>
+      }
     </div>
   </div>
 

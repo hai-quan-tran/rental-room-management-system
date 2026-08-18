@@ -4,7 +4,7 @@ export interface TenantResponse {
   id: number;
   fullName: string;
   dateOfBirth: string;
-  idCardNumber: string;
+  idCardNumber: string | null;
   phoneNumber: string;
   email: string | null;
   createdAt: string;
@@ -14,7 +14,7 @@ export interface TenantResponse {
 export interface TenantRequest {
   fullName: string;
   dateOfBirth: string;
-  idCardNumber: string;
+  idCardNumber: string | null;
   phoneNumber: string;
   email: string | null;
 }

@@ -5,7 +5,9 @@ import com.rentalroom.management.dto.request.TenantRequest;
 import com.rentalroom.management.dto.response.TenantRentalHistoryResponse;
 import com.rentalroom.management.dto.response.TenantResponse;
 import com.rentalroom.management.entity.Tenant;
+import com.rentalroom.management.enums.ContractStatus;
 import com.rentalroom.management.exception.BusinessException;
+import com.rentalroom.management.exception.ErrorCode;
 import com.rentalroom.management.repository.ContractTenantRepository;
 import com.rentalroom.management.repository.TenantRepository;
 import com.rentalroom.management.security.SecurityUtils;
@@ -15,8 +17,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Transactional
@@ -60,7 +65,9 @@ public class TenantService {
     }
 
     public TenantResponse create(TenantRequest request) {
-        if (tenantRepository.existsByIdCardNumber(request.idCardNumber())) {
+        assertCccdRequiredIfAdult(request.dateOfBirth(), request.idCardNumber());
+        String idCardNumber = normalizeIdCardNumber(request.idCardNumber());
+        if (idCardNumber != null && tenantRepository.existsByIdCardNumber(idCardNumber)) {
             throw BusinessException.conflict("CCCD đã tồn tại trong hệ thống");
         }
         Tenant tenant = new Tenant();
@@ -72,9 +79,18 @@ public class TenantService {
 
     public TenantResponse update(Long id, TenantRequest request) {
         Tenant tenant = findEntity(id);
-        if (!tenant.getIdCardNumber().equals(request.idCardNumber())
-                && tenantRepository.existsByIdCardNumberAndIdNot(request.idCardNumber(), id)) {
+        assertCccdRequiredIfAdult(request.dateOfBirth(), request.idCardNumber());
+        String idCardNumber = normalizeIdCardNumber(request.idCardNumber());
+        if (!Objects.equals(tenant.getIdCardNumber(), idCardNumber)
+                && idCardNumber != null
+                && tenantRepository.existsByIdCardNumberAndIdNot(idCardNumber, id)) {
             throw BusinessException.conflict("CCCD đã tồn tại trong hệ thống");
+        }
+        if ((request.email() == null || request.email().isBlank())
+                && contractTenantRepository.existsById_TenantIdAndRepresentativeTrueAndContract_Status(
+                        id, ContractStatus.ACTIVE)) {
+            throw BusinessException.conflict(
+                    "Không thể xóa email của người đang là đại diện của hợp đồng đang hiệu lực");
         }
         applyRequest(tenant, request);
         tenant.setUpdatedBy(SecurityUtils.currentUser().userId());
@@ -92,9 +108,20 @@ public class TenantService {
     private void applyRequest(Tenant tenant, TenantRequest request) {
         tenant.setFullName(request.fullName());
         tenant.setDateOfBirth(request.dateOfBirth());
-        tenant.setIdCardNumber(request.idCardNumber());
+        tenant.setIdCardNumber(normalizeIdCardNumber(request.idCardNumber()));
         tenant.setPhoneNumber(request.phoneNumber());
         tenant.setEmail(request.email());
+    }
+
+    private void assertCccdRequiredIfAdult(LocalDate dateOfBirth, String idCardNumber) {
+        boolean isAdult = Period.between(dateOfBirth, LocalDate.now()).getYears() >= 18;
+        if (isAdult && (idCardNumber == null || idCardNumber.isBlank())) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "CCCD bắt buộc với người thuê từ 18 tuổi trở lên");
+        }
+    }
+
+    private String normalizeIdCardNumber(String idCardNumber) {
+        return (idCardNumber == null || idCardNumber.isBlank()) ? null : idCardNumber;
     }
 
     private Tenant findEntity(Long id) {

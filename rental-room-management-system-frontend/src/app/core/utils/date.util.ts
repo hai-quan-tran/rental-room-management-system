@@ -31,3 +31,13 @@ export function addMonths(
 export function shiftMonthDate(date: Date, delta: number): Date {
   return new Date(date.getFullYear(), date.getMonth() + delta, 1);
 }
+
+/** Age in full years as of today, accounting for whether this year's birthday has passed. */
+export function calculateAge(dateOfBirth: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - dateOfBirth.getFullYear();
+  const hasHadBirthdayThisYear =
+    today.getMonth() > dateOfBirth.getMonth() ||
+    (today.getMonth() === dateOfBirth.getMonth() && today.getDate() >= dateOfBirth.getDate());
+  return hasHadBirthdayThisYear ? age : age - 1;
+}

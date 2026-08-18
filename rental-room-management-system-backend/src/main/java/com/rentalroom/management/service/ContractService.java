@@ -144,6 +144,9 @@ public class ContractService {
     private void attachTenant(Contract contract, Long tenantId, boolean representative) {
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> BusinessException.notFound("Không tìm thấy người thuê"));
+        if (representative && (tenant.getEmail() == null || tenant.getEmail().isBlank())) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Người đại diện ký hợp đồng phải có email");
+        }
         ContractTenant contractTenant = new ContractTenant();
         contractTenant.setId(new ContractTenantId(contract.getId(), tenantId));
         contractTenant.setContract(contract);

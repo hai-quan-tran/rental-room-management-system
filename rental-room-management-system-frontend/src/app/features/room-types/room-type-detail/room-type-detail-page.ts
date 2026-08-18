@@ -155,23 +155,25 @@ export class RoomTypeDetailPage implements OnInit {
       note: note || null,
     }));
 
-    const save$ = this.isNew()
-      ? this.roomTypeService.create(this.branchId, request)
-      : this.roomTypeService.update(this.roomTypeId!, request);
+    this.confirmService.confirm(this.translate.instant('COMMON.SAVE_CONFIRM'), () => {
+      const save$ = this.isNew()
+        ? this.roomTypeService.create(this.branchId, request)
+        : this.roomTypeService.update(this.roomTypeId!, request);
 
-    save$.subscribe({
-      next: (roomType) => {
-        this.roomTypeService.replaceHandoverItems(roomType.id, handoverItemRequests).subscribe({
-          next: () => {
-            this.notification.success(
-              this.translate.instant(this.isNew() ? 'ROOM_TYPE.CREATE_SUCCESS' : 'ROOM_TYPE.UPDATE_SUCCESS'),
-            );
-            this.router.navigate(['/room-types']);
-          },
-          error: () => {},
-        });
-      },
-      error: () => {},
+      save$.subscribe({
+        next: (roomType) => {
+          this.roomTypeService.replaceHandoverItems(roomType.id, handoverItemRequests).subscribe({
+            next: () => {
+              this.notification.success(
+                this.translate.instant(this.isNew() ? 'ROOM_TYPE.CREATE_SUCCESS' : 'ROOM_TYPE.UPDATE_SUCCESS'),
+              );
+              this.router.navigate(['/room-types']);
+            },
+            error: () => {},
+          });
+        },
+        error: () => {},
+      });
     });
   }
 

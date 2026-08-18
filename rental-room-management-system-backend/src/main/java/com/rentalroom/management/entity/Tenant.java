@@ -35,7 +35,7 @@ public class Tenant {
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(name = "id_card_number", length = 20, nullable = false, unique = true)
+    @Column(name = "id_card_number", length = 20, unique = true)
     private String idCardNumber;
 
     @Column(name = "phone_number", length = 20, nullable = false)

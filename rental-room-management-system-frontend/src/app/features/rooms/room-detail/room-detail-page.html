@@ -369,6 +369,15 @@
                 'CONTRACT.NEED_AT_LEAST_ONE_TENANT' | translate
               }}</small>
             }
+            @if (
+              newContractSubmitted() &&
+              newContractTenants().length > 0 &&
+              !newContractRepresentativeHasEmail()
+            ) {
+              <small class="field-error">{{
+                'CONTRACT.REPRESENTATIVE_EMAIL_REQUIRED' | translate
+              }}</small>
+            }
 
             <div class="room-tenant-picker">
               <p-autocomplete
@@ -972,7 +981,7 @@
           [ngModel]="tenantIdCard()"
           (ngModelChange)="tenantIdCard.set($event)"
         />
-        @if (tenantSubmitted() && !tenantIdCard()) {
+        @if (tenantSubmitted() && tenantIsAdult() && !tenantIdCard()) {
           <small class="field-error">{{ 'VALIDATION.REQUIRED' | translate }}</small>
         }
       </div>

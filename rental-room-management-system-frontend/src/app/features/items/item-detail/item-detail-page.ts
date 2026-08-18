@@ -86,16 +86,20 @@ export class ItemDetailPage implements OnInit {
       defaultQuantityPerRoom: this.defaultQuantityPerRoom()!,
     };
 
-    const save$ = this.isNew()
-      ? this.itemService.create(this.branchId, request)
-      : this.itemService.update(this.itemId!, request);
+    this.confirmService.confirm(this.translate.instant('COMMON.SAVE_CONFIRM'), () => {
+      const save$ = this.isNew()
+        ? this.itemService.create(this.branchId, request)
+        : this.itemService.update(this.itemId!, request);
 
-    save$.subscribe({
-      next: () => {
-        this.notification.success(this.translate.instant(this.isNew() ? 'ITEM.CREATE_SUCCESS' : 'ITEM.UPDATE_SUCCESS'));
-        this.router.navigate(['/items']);
-      },
-      error: () => {},
+      save$.subscribe({
+        next: () => {
+          this.notification.success(
+            this.translate.instant(this.isNew() ? 'ITEM.CREATE_SUCCESS' : 'ITEM.UPDATE_SUCCESS'),
+          );
+          this.router.navigate(['/items']);
+        },
+        error: () => {},
+      });
     });
   }
 

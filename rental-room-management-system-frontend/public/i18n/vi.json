@@ -31,6 +31,7 @@
   },
   "COMMON": {
     "SAVE": "Lưu",
+    "SAVE_CONFIRM": "Bạn có chắc chắn muốn lưu các thay đổi?",
     "CANCEL": "Hủy",
     "EDIT": "Sửa",
     "DELETE": "Xóa",
@@ -102,7 +103,8 @@
     "RENTAL_HISTORY": "Lịch sử thuê phòng",
     "RENTAL_PERIOD": "Thời gian thuê",
     "REPRESENTATIVE": "Đại diện",
-    "REPRESENTATIVE_TAG": "Người ký hợp đồng"
+    "REPRESENTATIVE_TAG": "Người ký hợp đồng",
+    "EMAIL_REQUIRED_REPRESENTATIVE": "Không thể xóa email vì người này đang là đại diện của một hợp đồng đang hiệu lực"
   },
   "EMPLOYEE": {
     "FULL_NAME": "Họ tên",
@@ -144,7 +146,8 @@
     "VIEW_BILLS": "Xem hóa đơn & công nợ",
     "END_DATE_UPDATE_SUCCESS": "Cập nhật ngày kết thúc thành công",
     "ADD_TENANT_SUCCESS": "Thêm người thuê thành công",
-    "REMOVE_TENANT_CONFIRM": "Bạn có chắc chắn muốn xóa người thuê này khỏi hợp đồng?"
+    "REMOVE_TENANT_CONFIRM": "Bạn có chắc chắn muốn xóa người thuê này khỏi hợp đồng?",
+    "REPRESENTATIVE_EMAIL_REQUIRED": "Người đại diện ký hợp đồng phải có email"
   },
   "BRANCH": {
     "NAME": "Chi nhánh",

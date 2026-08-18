@@ -31,6 +31,7 @@
   },
   "COMMON": {
     "SAVE": "Save",
+    "SAVE_CONFIRM": "Are you sure you want to save these changes?",
     "CANCEL": "Cancel",
     "EDIT": "Edit",
     "DELETE": "Delete",
@@ -102,7 +103,8 @@
     "RENTAL_HISTORY": "Rental history",
     "RENTAL_PERIOD": "Rental period",
     "REPRESENTATIVE": "Representative",
-    "REPRESENTATIVE_TAG": "Contract signer"
+    "REPRESENTATIVE_TAG": "Contract signer",
+    "EMAIL_REQUIRED_REPRESENTATIVE": "Cannot clear email — this tenant is the representative of an active contract"
   },
   "EMPLOYEE": {
     "FULL_NAME": "Full name",
@@ -144,7 +146,8 @@
     "VIEW_BILLS": "View bills & debt",
     "END_DATE_UPDATE_SUCCESS": "End date updated successfully",
     "ADD_TENANT_SUCCESS": "Tenant added successfully",
-    "REMOVE_TENANT_CONFIRM": "Are you sure you want to remove this tenant from the contract?"
+    "REMOVE_TENANT_CONFIRM": "Are you sure you want to remove this tenant from the contract?",
+    "REPRESENTATIVE_EMAIL_REQUIRED": "The contract representative must have an email"
   },
   "BRANCH": {
     "NAME": "Branch",

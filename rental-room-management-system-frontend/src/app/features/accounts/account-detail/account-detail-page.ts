@@ -87,31 +87,35 @@ export class AccountDetailPage implements OnInit {
     }
 
     if (this.isNew()) {
+      this.confirmService.confirm(this.translate.instant('COMMON.SAVE_CONFIRM'), () => {
+        this.accountService
+          .create({
+            username: this.username(),
+            password: this.password(),
+            role: this.role(),
+          })
+          .subscribe({
+            next: () => {
+              this.notification.success(this.translate.instant('ACCOUNT.CREATE_SUCCESS'));
+              this.router.navigate(['/accounts']);
+            },
+            error: () => {},
+          });
+      });
+      return;
+    }
+
+    this.confirmService.confirm(this.translate.instant('COMMON.SAVE_CONFIRM'), () => {
       this.accountService
-        .create({
-          username: this.username(),
-          password: this.password(),
-          role: this.role(),
-        })
+        .update(this.accountId!, { username: this.username(), role: this.role() })
         .subscribe({
           next: () => {
-            this.notification.success(this.translate.instant('ACCOUNT.CREATE_SUCCESS'));
+            this.notification.success(this.translate.instant('ACCOUNT.UPDATE_SUCCESS'));
             this.router.navigate(['/accounts']);
           },
           error: () => {},
         });
-      return;
-    }
-
-    this.accountService
-      .update(this.accountId!, { username: this.username(), role: this.role() })
-      .subscribe({
-        next: () => {
-          this.notification.success(this.translate.instant('ACCOUNT.UPDATE_SUCCESS'));
-          this.router.navigate(['/accounts']);
-        },
-        error: () => {},
-      });
+    });
   }
 
   toggleActive(): void {

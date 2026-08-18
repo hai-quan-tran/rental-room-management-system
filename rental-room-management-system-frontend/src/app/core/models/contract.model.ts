@@ -16,7 +16,7 @@ export interface ContractResponse {
 export interface TenantInContractResponse {
   tenantId: number;
   fullName: string;
-  idCardNumber: string;
+  idCardNumber: string | null;
   phoneNumber: string;
   representative: boolean;
 }

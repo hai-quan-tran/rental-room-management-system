@@ -13,7 +13,7 @@ import { ConfirmService } from '../../../core/services/confirm.service';
 import { LoadingService } from '../../../core/services/loading.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { TenantService } from '../../../core/services/tenant.service';
-import { fromIsoDate, toIsoDate } from '../../../core/utils/date.util';
+import { calculateAge, fromIsoDate, toIsoDate } from '../../../core/utils/date.util';
 import { displayOr } from '../../../shared/utils/display.util';
 
 @Component({
@@ -55,6 +55,15 @@ export class TenantDetailPage implements OnInit {
 
   readonly rentalHistory = signal<TenantRentalHistoryResponse[]>([]);
 
+  readonly isAdult = computed(() => {
+    const dob = this.dateOfBirth();
+    return dob ? calculateAge(dob) >= 18 : false;
+  });
+
+  readonly emailRequiredAsRepresentative = computed(
+    () => !this.email() && this.rentalHistory().some((h) => h.representative && h.status === 'ACTIVE'),
+  );
+
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
     if (!idParam || idParam === 'new') {
@@ -66,7 +75,7 @@ export class TenantDetailPage implements OnInit {
       next: (tenant) => {
         this.fullName.set(tenant.fullName);
         this.dateOfBirth.set(fromIsoDate(tenant.dateOfBirth));
-        this.idCardNumber.set(tenant.idCardNumber);
+        this.idCardNumber.set(tenant.idCardNumber ?? '');
         this.phoneNumber.set(tenant.phoneNumber);
         this.email.set(tenant.email ?? '');
       },
@@ -82,30 +91,38 @@ export class TenantDetailPage implements OnInit {
   save(): void {
     this.submitted.set(true);
     const dob = this.dateOfBirth();
-    if (!this.fullName() || !dob || !this.idCardNumber() || !this.phoneNumber()) {
+    if (!this.fullName() || !dob || !this.phoneNumber()) {
+      return;
+    }
+    if (this.isAdult() && !this.idCardNumber()) {
+      return;
+    }
+    if (this.emailRequiredAsRepresentative()) {
       return;
     }
 
     const request = {
       fullName: this.fullName(),
       dateOfBirth: toIsoDate(dob),
-      idCardNumber: this.idCardNumber(),
+      idCardNumber: this.idCardNumber() || null,
       phoneNumber: this.phoneNumber(),
       email: this.email() || null,
     };
 
-    const save$ = this.isNew()
-      ? this.tenantService.create(request)
-      : this.tenantService.update(this.tenantId!, request);
+    this.confirmService.confirm(this.translate.instant('COMMON.SAVE_CONFIRM'), () => {
+      const save$ = this.isNew()
+        ? this.tenantService.create(request)
+        : this.tenantService.update(this.tenantId!, request);
 
-    save$.subscribe({
-      next: () => {
-        this.notification.success(
-          this.translate.instant(this.isNew() ? 'TENANT.CREATE_SUCCESS' : 'TENANT.UPDATE_SUCCESS'),
-        );
-        this.router.navigate(['/tenants']);
-      },
-      error: () => {},
+      save$.subscribe({
+        next: () => {
+          this.notification.success(
+            this.translate.instant(this.isNew() ? 'TENANT.CREATE_SUCCESS' : 'TENANT.UPDATE_SUCCESS'),
+          );
+          this.router.navigate(['/tenants']);
+        },
+        error: () => {},
+      });
     });
   }
 

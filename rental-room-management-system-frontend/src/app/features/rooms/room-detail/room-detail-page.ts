@@ -45,7 +45,7 @@ import { NotificationService } from '../../../core/services/notification.service
 import { RoomTypeService } from '../../../core/services/room-type.service';
 import { RoomService } from '../../../core/services/room.service';
 import { TenantService } from '../../../core/services/tenant.service';
-import { dateToYearMonth, fromIsoDate, toIsoDate } from '../../../core/utils/date.util';
+import { calculateAge, dateToYearMonth, fromIsoDate, toIsoDate } from '../../../core/utils/date.util';
 import { displayOr } from '../../../shared/utils/display.util';
 import {
   canEditBillItems,
@@ -58,6 +58,7 @@ import { translatedOptions } from '../../../shared/utils/translated-options';
 interface NewContractTenantRow {
   tenantId: number;
   fullName: string;
+  email: string | null;
   representative: boolean;
 }
 
@@ -151,6 +152,10 @@ export class RoomDetailPage implements OnInit {
   readonly newContractRent = signal<number | null>(null);
   readonly newContractTenants = signal<NewContractTenantRow[]>([]);
   readonly newContractSubmitted = signal(false);
+  readonly newContractRepresentativeHasEmail = computed(() => {
+    const rep = this.newContractTenants().find((t) => t.representative);
+    return !rep || !!rep.email;
+  });
   readonly newContractTenantQuery = signal('');
   readonly newContractTenantSuggestions = signal<TenantResponse[]>([]);
 
@@ -173,6 +178,10 @@ export class RoomDetailPage implements OnInit {
   readonly tenantPhone = signal('');
   readonly tenantEmail = signal('');
   readonly tenantSubmitted = signal(false);
+  readonly tenantIsAdult = computed(() => {
+    const dob = this.tenantDateOfBirth();
+    return dob ? calculateAge(dob) >= 18 : false;
+  });
 
   readonly checklistDialogVisible = signal(false);
   readonly checklistData = signal<CheckoutResponse | null>(null);
@@ -281,16 +290,18 @@ export class RoomDetailPage implements OnInit {
       return;
     }
     const endDate = this.editEndDate();
-    this.contractService
-      .updateEndDate(contract.id, { endDate: endDate ? toIsoDate(endDate) : null })
-      .subscribe({
-        next: (detail) => {
-          this.activeContractDetail.set(detail);
-          this.loadContracts();
-          this.notification.success(this.translate.instant('CONTRACT.END_DATE_UPDATE_SUCCESS'));
-        },
-        error: () => {},
-      });
+    this.confirmService.confirm(this.translate.instant('COMMON.SAVE_CONFIRM'), () => {
+      this.contractService
+        .updateEndDate(contract.id, { endDate: endDate ? toIsoDate(endDate) : null })
+        .subscribe({
+          next: (detail) => {
+            this.activeContractDetail.set(detail);
+            this.loadContracts();
+            this.notification.success(this.translate.instant('CONTRACT.END_DATE_UPDATE_SUCCESS'));
+          },
+          error: () => {},
+        });
+    });
   }
 
   // ---- Tab 1 actions ----
@@ -307,22 +318,24 @@ export class RoomDetailPage implements OnInit {
       wifiFee: this.wifiFee() ?? 0,
       parkingFee: this.parkingFee() ?? 0,
     };
-    const save$ = this.isNew()
-      ? this.roomService.create(this.branchId, request)
-      : this.roomService.update(this.roomId!, request);
+    this.confirmService.confirm(this.translate.instant('COMMON.SAVE_CONFIRM'), () => {
+      const save$ = this.isNew()
+        ? this.roomService.create(this.branchId, request)
+        : this.roomService.update(this.roomId!, request);
 
-    save$.subscribe({
-      next: (room) => {
-        this.notification.success(
-          this.translate.instant(this.isNew() ? 'ROOM.CREATE_SUCCESS' : 'ROOM.UPDATE_SUCCESS'),
-        );
-        if (this.isNew()) {
-          this.router.navigate(['/rooms', room.id]);
-        } else {
-          this.loadRoom();
-        }
-      },
-      error: () => {},
+      save$.subscribe({
+        next: (room) => {
+          this.notification.success(
+            this.translate.instant(this.isNew() ? 'ROOM.CREATE_SUCCESS' : 'ROOM.UPDATE_SUCCESS'),
+          );
+          if (this.isNew()) {
+            this.router.navigate(['/rooms', room.id]);
+          } else {
+            this.loadRoom();
+          }
+        },
+        error: () => {},
+      });
     });
   }
 
@@ -392,7 +405,7 @@ export class RoomDetailPage implements OnInit {
     const isFirst = this.newContractTenants().length === 0;
     this.newContractTenants.update((rows) => [
       ...rows,
-      { tenantId: tenant.id, fullName: tenant.fullName, representative: isFirst },
+      { tenantId: tenant.id, fullName: tenant.fullName, email: tenant.email, representative: isFirst },
     ]);
     this.newContractTenantQuery.set('');
   }
@@ -410,7 +423,12 @@ export class RoomDetailPage implements OnInit {
   createContract(): void {
     this.newContractSubmitted.set(true);
     const startDate = this.newContractStartDate();
-    if (!startDate || !this.newContractDeposit() || this.newContractTenants().length === 0) {
+    if (
+      !startDate ||
+      !this.newContractDeposit() ||
+      this.newContractTenants().length === 0 ||
+      !this.newContractRepresentativeHasEmail()
+    ) {
       return;
     }
 
@@ -486,7 +504,10 @@ export class RoomDetailPage implements OnInit {
   submitNewTenant(): void {
     this.tenantSubmitted.set(true);
     const dob = this.tenantDateOfBirth();
-    if (!this.tenantFullName() || !dob || !this.tenantIdCard() || !this.tenantPhone()) {
+    if (!this.tenantFullName() || !dob || !this.tenantPhone()) {
+      return;
+    }
+    if (this.tenantIsAdult() && !this.tenantIdCard()) {
       return;
     }
 
@@ -494,7 +515,7 @@ export class RoomDetailPage implements OnInit {
       .create({
         fullName: this.tenantFullName(),
         dateOfBirth: toIsoDate(dob),
-        idCardNumber: this.tenantIdCard(),
+        idCardNumber: this.tenantIdCard() || null,
         phoneNumber: this.tenantPhone(),
         email: this.tenantEmail() || null,
       })
