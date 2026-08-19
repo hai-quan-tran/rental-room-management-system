@@ -28,6 +28,18 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
 
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 server:
   port: ${SERVER_PORT:8080}
 
@@ -45,6 +57,9 @@ app:
     secret: ${JWT_SECRET:change-this-secret-in-production-please-make-it-at-least-256-bits-long}
     access-token-expiration-minutes: ${JWT_ACCESS_EXPIRATION_MINUTES:30}
     refresh-token-expiration-days: ${JWT_REFRESH_EXPIRATION_DAYS:7}
+  invoice-reminder:
+    # 8h sáng các ngày 7, 8, 9 hằng tháng — nhắc quản lý chi nhánh về hóa đơn tháng trước còn thiếu/chưa xác nhận.
+    cron: ${INVOICE_REMINDER_CRON:0 0 8 7-9 * *}
 
 logging:
   level:

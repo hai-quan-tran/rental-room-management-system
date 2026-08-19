@@ -6,6 +6,7 @@ import com.rentalroom.management.repository.projection.ContractBillPeriod;
 import com.rentalroom.management.repository.projection.MonthCount;
 import com.rentalroom.management.repository.projection.MonthRevenue;
 import com.rentalroom.management.repository.projection.OccupantsByBranchRow;
+import com.rentalroom.management.repository.projection.RoomInvoiceActionRow;
 import com.rentalroom.management.repository.projection.RoomStatusCount;
 import com.rentalroom.management.repository.projection.UnpaidInvoiceRoomRow;
 import org.springframework.data.jpa.repository.Query;
@@ -110,4 +111,21 @@ public interface DashboardRepository extends Repository<Room, Long> {
             ORDER BY mb.bill_year DESC, mb.bill_month DESC, mb.remaining_amount DESC
             """, nativeQuery = true)
     List<UnpaidInvoiceRoomRow> unpaidInvoiceRooms(@Param("branchIds") List<Long> branchIds);
+
+    /**
+     * Every currently-occupied room whose bill for {@code year}/{@code month} either doesn't exist
+     * yet or exists but is still {@code CHUA_XAC_NHAN} — backs the invoice-reminder email job
+     * (InvoiceReminderService). Not branch-scoped by caller since the job itself iterates every branch.
+     */
+    @Query(value = """
+            SELECT r.id AS roomId, r.room_code AS roomCode, r.branch_id AS branchId, b.name AS branchName,
+                   CASE WHEN mb.id IS NULL THEN 'MISSING' ELSE 'UNCONFIRMED' END AS reason
+            FROM contract c
+            JOIN room r ON r.id = c.room_id
+            JOIN branch b ON b.id = r.branch_id
+            LEFT JOIN monthly_bill mb ON mb.contract_id = c.id AND mb.bill_year = :year AND mb.bill_month = :month
+            WHERE c.status = 'ACTIVE' AND (mb.id IS NULL OR mb.payment_status = 'CHUA_XAC_NHAN')
+            ORDER BY b.name, r.room_code
+            """, nativeQuery = true)
+    List<RoomInvoiceActionRow> roomsNeedingInvoiceAction(@Param("year") int year, @Param("month") int month);
 }
