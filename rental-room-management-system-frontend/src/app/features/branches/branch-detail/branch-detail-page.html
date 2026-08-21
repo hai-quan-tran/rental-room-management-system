@@ -33,6 +33,43 @@
         [placeholder]="'BRANCH.MANAGER' | translate"
       />
     </div>
+
+    <div class="field">
+      <label for="bankBin">{{ 'BRANCH.BANK_BIN' | translate }}</label>
+      <p-select
+        inputId="bankBin"
+        [options]="bankOptions"
+        [ngModel]="bankBin()"
+        (ngModelChange)="bankBin.set($event)"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        [showClear]="true"
+        [placeholder]="'BRANCH.BANK_BIN' | translate"
+      />
+    </div>
+
+    <div class="field">
+      <label for="bankAccountNumber">{{ 'BRANCH.BANK_ACCOUNT_NUMBER' | translate }}</label>
+      <input
+        id="bankAccountNumber"
+        type="text"
+        pInputText
+        [ngModel]="bankAccountNumber()"
+        (ngModelChange)="bankAccountNumber.set($event)"
+      />
+    </div>
+
+    <div class="field">
+      <label for="bankAccountName">{{ 'BRANCH.BANK_ACCOUNT_NAME' | translate }}</label>
+      <input
+        id="bankAccountName"
+        type="text"
+        pInputText
+        [ngModel]="bankAccountName()"
+        (ngModelChange)="bankAccountName.set($event)"
+      />
+    </div>
   </div>
 
   <div class="detail-page__actions">

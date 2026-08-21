@@ -121,7 +121,7 @@ class BranchServiceTest {
 
     @Test
     void create_noManager_savesWithNullManager() {
-        BranchRequest request = new BranchRequest("Chi nhánh mới", "456 Lê Lợi", null);
+        BranchRequest request = new BranchRequest("Chi nhánh mới", "456 Lê Lợi", null, null, null, null);
 
         BranchResponse response = assertDoesNotThrow(() -> branchService.create(request));
 
@@ -132,7 +132,7 @@ class BranchServiceTest {
     @Test
     void create_managerNotFound_throwsNotFound() {
         when(accountRepository.findById(10L)).thenReturn(Optional.empty());
-        BranchRequest request = new BranchRequest("Chi nhánh mới", "456 Lê Lợi", 10L);
+        BranchRequest request = new BranchRequest("Chi nhánh mới", "456 Lê Lợi", 10L, null, null, null);
 
         assertThrows(BusinessException.class, () -> branchService.create(request));
     }
@@ -141,7 +141,7 @@ class BranchServiceTest {
     void create_managerWrongRole_throwsValidationError() {
         manager.setRole(Role.USER);
         when(accountRepository.findById(10L)).thenReturn(Optional.of(manager));
-        BranchRequest request = new BranchRequest("Chi nhánh mới", "456 Lê Lợi", 10L);
+        BranchRequest request = new BranchRequest("Chi nhánh mới", "456 Lê Lợi", 10L, null, null, null);
 
         assertThrows(BusinessException.class, () -> branchService.create(request));
     }
@@ -149,21 +149,26 @@ class BranchServiceTest {
     @Test
     void create_validManager_savesWithManager() {
         when(accountRepository.findById(10L)).thenReturn(Optional.of(manager));
-        BranchRequest request = new BranchRequest("Chi nhánh mới", "456 Lê Lợi", 10L);
+        BranchRequest request = new BranchRequest(
+                "Chi nhánh mới", "456 Lê Lợi", 10L, "970436", "0123456789", "NGUYEN VAN A");
 
         BranchResponse response = assertDoesNotThrow(() -> branchService.create(request));
 
         assertEquals(10L, response.managerAccountId());
+        assertEquals("970436", response.bankBin());
+        assertEquals("0123456789", response.bankAccountNumber());
+        assertEquals("NGUYEN VAN A", response.bankAccountName());
 
         ArgumentCaptor<Branch> captor = ArgumentCaptor.forClass(Branch.class);
         verify(branchRepository).save(captor.capture());
         assertEquals(manager, captor.getValue().getManagerAccount());
+        assertEquals("970436", captor.getValue().getBankBin());
     }
 
     @Test
     void update_notFound_throwsNotFound() {
         when(branchRepository.findById(99L)).thenReturn(Optional.empty());
-        BranchRequest request = new BranchRequest("Tên mới", "Địa chỉ mới", null);
+        BranchRequest request = new BranchRequest("Tên mới", "Địa chỉ mới", null, null, null, null);
 
         assertThrows(BusinessException.class, () -> branchService.update(99L, request));
     }
@@ -171,13 +176,17 @@ class BranchServiceTest {
     @Test
     void update_valid_updatesNameAddressAndManager() {
         when(accountRepository.findById(10L)).thenReturn(Optional.of(manager));
-        BranchRequest request = new BranchRequest("Tên mới", "Địa chỉ mới", 10L);
+        BranchRequest request = new BranchRequest(
+                "Tên mới", "Địa chỉ mới", 10L, "970422", "9876543210", "TRAN THI B");
 
         BranchResponse response = assertDoesNotThrow(() -> branchService.update(1L, request));
 
         assertEquals("Tên mới", response.name());
         assertEquals("Địa chỉ mới", response.address());
         assertEquals(10L, response.managerAccountId());
+        assertEquals("970422", response.bankBin());
+        assertEquals("9876543210", response.bankAccountNumber());
+        assertEquals("TRAN THI B", response.bankAccountName());
     }
 
     private BranchRoomSummary newSummary(long branchId, long roomTypeId, String roomTypeName,

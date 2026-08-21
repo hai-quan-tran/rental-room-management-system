@@ -624,6 +624,16 @@
                 </div>
               </div>
 
+              @if (bankQrUrl(); as qrUrl) {
+                <div class="room-bill-qr">
+                  <img [src]="qrUrl" [alt]="'BILLING.QR_TITLE' | translate" class="room-bill-qr__image" />
+                  <div class="room-bill-qr__info">
+                    <p>{{ 'BILLING.QR_TITLE' | translate }}</p>
+                    <p>{{ bankAccountNumber() }} — {{ displayOr(bankAccountName()) }}</p>
+                  </div>
+                </div>
+              }
+
               <p-table [value]="detail.payments" dataKey="id">
                 <ng-template #header>
                   <tr>

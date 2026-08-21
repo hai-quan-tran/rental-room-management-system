@@ -10,6 +10,9 @@ public record BranchResponse(
         String address,
         Long managerAccountId,
         String managerFullName,
+        String bankBin,
+        String bankAccountNumber,
+        String bankAccountName,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -20,6 +23,9 @@ public record BranchResponse(
                 branch.getAddress(),
                 branch.getManagerAccount() != null ? branch.getManagerAccount().getId() : null,
                 branch.getManagerAccount() != null ? branch.getManagerAccount().getFullName() : null,
+                branch.getBankBin(),
+                branch.getBankAccountNumber(),
+                branch.getBankAccountName(),
                 branch.getCreatedAt(),
                 branch.getUpdatedAt()
         );

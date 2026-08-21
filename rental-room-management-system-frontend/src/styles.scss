@@ -19,6 +19,17 @@ body {
   width: 100%;
 }
 
+/* PrimeNG 21 bug: a pButton with a bound [loading] input (even while false)
+   still renders an empty placeholder <span class="p-button-icon ... p-hidden">.
+   The shipped theme never defines `.p-hidden`, so the empty span still counts
+   as a flex item and `.p-button`'s `gap` reserves space for it — pushing the
+   label off-center with a visible blank space before it. Every icon-less
+   Save/Submit button in this app binds [loading], so this hits nearly all of
+   them; buttons without [loading] never get the placeholder and render fine. */
+.p-button .p-button-icon.p-hidden {
+  display: none;
+}
+
 /* Shared layout for every List screen (Accounts/Tenants/Branches/Rooms/DebtRecords):
    a heading, a filter toolbar, then a lazy-loaded p-table. */
 .list-page {
@@ -181,6 +192,23 @@ body {
 
 .room-bill-table {
   margin-bottom: 1.5rem;
+}
+
+.room-bill-qr {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  &__image {
+    width: 180px;
+    height: auto;
+    border-radius: 6px;
+  }
+
+  &__info p {
+    margin: 0 0 0.25rem;
+  }
 }
 
 .collect-dialog {

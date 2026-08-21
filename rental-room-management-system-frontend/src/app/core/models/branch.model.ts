@@ -4,6 +4,9 @@ export interface BranchResponse {
   address: string;
   managerAccountId: number | null;
   managerFullName: string | null;
+  bankBin: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -12,6 +15,9 @@ export interface BranchRequest {
   name: string;
   address: string;
   managerAccountId: number | null;
+  bankBin: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
 }
 
 export interface RoomTypeSummaryResponse {

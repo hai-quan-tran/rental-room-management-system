@@ -80,6 +80,9 @@ public class BranchService {
         branch.setName(request.name());
         branch.setAddress(request.address());
         branch.setManagerAccount(resolveManager(request.managerAccountId()));
+        branch.setBankBin(request.bankBin());
+        branch.setBankAccountNumber(request.bankAccountNumber());
+        branch.setBankAccountName(request.bankAccountName());
         return BranchResponse.from(branchRepository.save(branch));
     }
 
@@ -89,6 +92,9 @@ public class BranchService {
         branch.setName(request.name());
         branch.setAddress(request.address());
         branch.setManagerAccount(resolveManager(request.managerAccountId()));
+        branch.setBankBin(request.bankBin());
+        branch.setBankAccountNumber(request.bankAccountNumber());
+        branch.setBankAccountName(request.bankAccountName());
         return BranchResponse.from(branchRepository.save(branch));
     }
 

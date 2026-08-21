@@ -54,6 +54,7 @@ import {
   roomStatusSeverity,
 } from '../../../shared/utils/status-severity.util';
 import { translatedOptions } from '../../../shared/utils/translated-options';
+import { buildVietQrImageUrl, stripDiacritics } from '../../../shared/utils/vietqr.util';
 
 interface NewContractTenantRow {
   tenantId: number;
@@ -124,6 +125,9 @@ export class RoomDetailPage implements OnInit {
   readonly isNew = computed(() => this.roomId === null);
   private branchId!: number;
   readonly branchName = signal('');
+  readonly bankBin = signal<string | null>(null);
+  readonly bankAccountNumber = signal<string | null>(null);
+  readonly bankAccountName = signal<string | null>(null);
 
   // ---- Tab 1: thông tin cơ bản ----
   readonly roomCode = signal('');
@@ -199,6 +203,21 @@ export class RoomDetailPage implements OnInit {
   readonly newPaymentMethod = signal('');
   readonly newPaymentNote = signal('');
 
+  readonly bankQrUrl = computed(() => {
+    const detail = this.billDetail();
+    if (!detail || detail.bill.remainingAmount <= 0) {
+      return null;
+    }
+    const addInfo = stripDiacritics(`RRMS ${this.roomCode()} T${detail.bill.billMonth}.${detail.bill.billYear}`);
+    return buildVietQrImageUrl(
+      this.bankBin(),
+      this.bankAccountNumber(),
+      detail.bill.remainingAmount,
+      addInfo,
+      this.bankAccountName(),
+    );
+  });
+
   readonly paymentStatusOptions = translatedOptions(this.translate, [
     { labelKey: 'BILLING.STATUS_CHUA_XAC_NHAN', value: PaymentStatus.CHUA_XAC_NHAN },
     { labelKey: 'BILLING.STATUS_CHUA_THANH_TOAN', value: PaymentStatus.CHUA_THANH_TOAN },
@@ -249,6 +268,9 @@ export class RoomDetailPage implements OnInit {
         this.status.set(detail.room.status);
         this.branchId = detail.room.branchId;
         this.branchName.set(detail.room.branchName);
+        this.bankBin.set(detail.room.bankBin);
+        this.bankAccountNumber.set(detail.room.bankAccountNumber);
+        this.bankAccountName.set(detail.room.bankAccountName);
         this.handoverItems.set(detail.handoverItems);
         this.buildCheckoutItems();
         this.loadRoomTypeOptions();

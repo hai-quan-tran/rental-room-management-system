@@ -5,6 +5,9 @@ export interface RoomResponse {
   id: number;
   branchId: number;
   branchName: string;
+  bankBin: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
   roomCode: string;
   roomTypeId: number;
   roomTypeName: string;

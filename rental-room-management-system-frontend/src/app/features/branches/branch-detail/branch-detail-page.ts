@@ -13,6 +13,7 @@ import { BranchService } from '../../../core/services/branch.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { LoadingService } from '../../../core/services/loading.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { VIETNAM_BANKS } from '../../../shared/utils/vietnam-banks.const';
 
 interface ManagerOption {
   label: string;
@@ -43,7 +44,12 @@ export class BranchDetailPage implements OnInit {
   readonly name = signal('');
   readonly address = signal('');
   readonly managerAccountId = signal<number | null>(null);
+  readonly bankBin = signal<string | null>(null);
+  readonly bankAccountNumber = signal('');
+  readonly bankAccountName = signal('');
   readonly submitted = signal(false);
+
+  readonly bankOptions = VIETNAM_BANKS.map((b) => ({ label: `${b.shortName} — ${b.fullName}`, value: b.bin }));
 
   readonly managerOptions = signal<ManagerOption[]>([]);
   readonly totalRooms = signal(0);
@@ -69,6 +75,9 @@ export class BranchDetailPage implements OnInit {
         this.name.set(detail.branch.name);
         this.address.set(detail.branch.address);
         this.managerAccountId.set(detail.branch.managerAccountId);
+        this.bankBin.set(detail.branch.bankBin);
+        this.bankAccountNumber.set(detail.branch.bankAccountNumber ?? '');
+        this.bankAccountName.set(detail.branch.bankAccountName ?? '');
         this.totalRooms.set(detail.totalRooms);
         this.roomTypeSummaries.set(detail.roomTypeSummaries);
       },
@@ -82,7 +91,14 @@ export class BranchDetailPage implements OnInit {
       return;
     }
 
-    const request = { name: this.name(), address: this.address(), managerAccountId: this.managerAccountId() };
+    const request = {
+      name: this.name(),
+      address: this.address(),
+      managerAccountId: this.managerAccountId(),
+      bankBin: this.bankBin(),
+      bankAccountNumber: this.bankAccountNumber() || null,
+      bankAccountName: this.bankAccountName() || null,
+    };
 
     this.confirmService.confirm(this.translate.instant('COMMON.SAVE_CONFIRM'), () => {
       const save$ = this.isNew()
