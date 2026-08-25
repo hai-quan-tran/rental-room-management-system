@@ -2,11 +2,10 @@ spring:
   application:
     name: rental-room-management-system-backend
 
-  datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:rental_room_management}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Ho_Chi_Minh
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:admin}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+  # dev = dùng trực tiếp application-dev.yml (không cần set biến môi trường gì thêm).
+  # prod = phải set SPRING_PROFILES_ACTIVE=prod, khi đó application-prod.yml đòi hỏi đủ biến môi trường mới chạy được.
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
   jpa:
     hibernate:
@@ -22,24 +21,6 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-
-  mail:
-    host: ${MAIL_HOST:}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-
 server:
   port: ${SERVER_PORT:8080}
 
@@ -54,12 +35,14 @@ management:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:change-this-secret-in-production-please-make-it-at-least-256-bits-long}
     access-token-expiration-minutes: ${JWT_ACCESS_EXPIRATION_MINUTES:30}
     refresh-token-expiration-days: ${JWT_REFRESH_EXPIRATION_DAYS:7}
   invoice-reminder:
     # 8h sáng các ngày 7, 8, 9 hằng tháng — nhắc quản lý chi nhánh về hóa đơn tháng trước còn thiếu/chưa xác nhận.
     cron: ${INVOICE_REMINDER_CRON:0 0 8 7-9 * *}
+  tenant-bill-reminder:
+    # 8h sáng ngày 11 hằng tháng — nhắc người đại diện hợp đồng thanh toán hóa đơn tháng trước còn nợ.
+    cron: ${TENANT_BILL_REMINDER_CRON:0 0 8 11 * *}
 
 logging:
   level:

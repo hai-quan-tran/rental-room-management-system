@@ -14,6 +14,7 @@ npm-debug.log*
 .env
 .env.*
 !.env.example
+application-dev.yml
 
 # IDE
 .idea/

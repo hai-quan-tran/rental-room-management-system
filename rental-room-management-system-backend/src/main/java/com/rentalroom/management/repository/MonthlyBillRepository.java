@@ -25,4 +25,7 @@ public interface MonthlyBillRepository extends JpaRepository<MonthlyBill, Long> 
      * same billing month, which callers must treat as ambiguous rather than picking one.
      */
     List<MonthlyBill> findByContract_Room_IdAndBillYearAndBillMonth(Long roomId, Integer billYear, Integer billMonth);
+
+    /** Every bill for a given billing month, across all branches/contracts — callers filter by status/remaining amount in Java. */
+    List<MonthlyBill> findByBillYearAndBillMonth(Integer billYear, Integer billMonth);
 }

@@ -20,6 +20,11 @@ spring:
       host: localhost
       port: 6379
 
+  # Just enough to satisfy MailSenderAutoConfiguration's bean condition — no test ever sends
+  # a real email (EmailService is always mocked), this only lets the Spring context boot.
+  mail:
+    host: localhost
+
 app:
   jwt:
     secret: test-secret-key-for-context-load-smoke-test-only-not-for-real-use
